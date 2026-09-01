@@ -98,7 +98,7 @@
 
 # Answer the following question:
 #
-# One Git concept I understand better now is:
+# One Git concept I understand better now is: I have to hit push after committing.
 
 
 
