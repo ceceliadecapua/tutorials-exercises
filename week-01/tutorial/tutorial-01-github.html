@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Week-01: GitHub Workflow Tutorial</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="tutorial-01-github_files/libs/clipboard/clipboard.min.js"></script>
+<script src="tutorial-01-github_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="tutorial-01-github_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="tutorial-01-github_files/libs/quarto-html/popper.min.js"></script>
+<script src="tutorial-01-github_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="tutorial-01-github_files/libs/quarto-html/anchor.min.js"></script>
+<link href="tutorial-01-github_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="tutorial-01-github_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="tutorial-01-github_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="tutorial-01-github_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="tutorial-01-github_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#working-with-course-hub-and-your-personal-tutorial-repository-tutorials-exercises." id="toc-working-with-course-hub-and-your-personal-tutorial-repository-tutorials-exercises." class="nav-link active" data-scroll-target="#working-with-course-hub-and-your-personal-tutorial-repository-tutorials-exercises.">Working with <code>course-hub</code> and your personal tutorial repository <code>tutorials-exercises</code>.</a></li>
+  <li><a href="#background" id="toc-background" class="nav-link" data-scroll-target="#background">Background</a></li>
+  <li><a href="#learning-outcomes" id="toc-learning-outcomes" class="nav-link" data-scroll-target="#learning-outcomes">Learning outcomes</a></li>
+  <li><a href="#create-a-course-folder-on-your-computer" id="toc-create-a-course-folder-on-your-computer" class="nav-link" data-scroll-target="#create-a-course-folder-on-your-computer">1. Create a course folder on your computer</a></li>
+  <li><a href="#understand-the-two-repositories" id="toc-understand-the-two-repositories" class="nav-link" data-scroll-target="#understand-the-two-repositories">2. Understand the two repositories</a>
+  <ul class="collapse">
+  <li><a href="#central-course-repository-course-hub" id="toc-central-course-repository-course-hub" class="nav-link" data-scroll-target="#central-course-repository-course-hub">Central course repository: <code>course-hub</code></a></li>
+  <li><a href="#personal-tutorial-repository" id="toc-personal-tutorial-repository" class="nav-link" data-scroll-target="#personal-tutorial-repository">Personal tutorial repository</a></li>
+  </ul></li>
+  <li><a href="#remote-and-local-repositories" id="toc-remote-and-local-repositories" class="nav-link" data-scroll-target="#remote-and-local-repositories">3. Remote and local repositories</a></li>
+  <li><a href="#organize-your-course-folders" id="toc-organize-your-course-folders" class="nav-link" data-scroll-target="#organize-your-course-folders">4. Organize your course folders</a></li>
+  <li><a href="#clone-course-hub" id="toc-clone-course-hub" class="nav-link" data-scroll-target="#clone-course-hub">5. Clone <code>course-hub</code></a>
+  <ul class="collapse">
+  <li><a href="#on-github" id="toc-on-github" class="nav-link" data-scroll-target="#on-github">On GitHub</a></li>
+  <li><a href="#in-rstudio" id="toc-in-rstudio" class="nav-link" data-scroll-target="#in-rstudio">In RStudio</a></li>
+  <li><a href="#check-your-work" id="toc-check-your-work" class="nav-link" data-scroll-target="#check-your-work">Check your work</a></li>
+  </ul></li>
+  <li><a href="#practice-pulling-an-instructor-update" id="toc-practice-pulling-an-instructor-update" class="nav-link" data-scroll-target="#practice-pulling-an-instructor-update">6. Practice pulling an instructor update</a>
+  <ul class="collapse">
+  <li><a href="#key-idea" id="toc-key-idea" class="nav-link" data-scroll-target="#key-idea">Key idea</a></li>
+  </ul></li>
+  <li><a href="#create-your-personal-tutorial-repository" id="toc-create-your-personal-tutorial-repository" class="nav-link" data-scroll-target="#create-your-personal-tutorial-repository">7. Create your personal tutorial repository</a>
+  <ul class="collapse">
+  <li><a href="#on-github-1" id="toc-on-github-1" class="nav-link" data-scroll-target="#on-github-1">On GitHub</a></li>
+  </ul></li>
+  <li><a href="#clone-your-tutorial-repository" id="toc-clone-your-tutorial-repository" class="nav-link" data-scroll-target="#clone-your-tutorial-repository">8. Clone your tutorial repository</a>
+  <ul class="collapse">
+  <li><a href="#on-github-2" id="toc-on-github-2" class="nav-link" data-scroll-target="#on-github-2">On GitHub</a></li>
+  <li><a href="#in-rstudio-1" id="toc-in-rstudio-1" class="nav-link" data-scroll-target="#in-rstudio-1">In RStudio</a></li>
+  </ul></li>
+  <li><a href="#copy-the-week-1-materials" id="toc-copy-the-week-1-materials" class="nav-link" data-scroll-target="#copy-the-week-1-materials">9. Copy the Week 1 materials</a>
+  <ul class="collapse">
+  <li><a href="#close-or-save-any-open-files" id="toc-close-or-save-any-open-files" class="nav-link" data-scroll-target="#close-or-save-any-open-files">Close or save any open files</a></li>
+  <li><a href="#using-finder-or-file-explorer" id="toc-using-finder-or-file-explorer" class="nav-link" data-scroll-target="#using-finder-or-file-explorer">Using Finder or File Explorer</a></li>
+  </ul></li>
+  <li><a href="#open-rstudio-as-if-you-are-just-starting-class" id="toc-open-rstudio-as-if-you-are-just-starting-class" class="nav-link" data-scroll-target="#open-rstudio-as-if-you-are-just-starting-class">10. Open Rstudio as if you are just starting class</a></li>
+  <li><a href="#your-weekly-in-class-workflow" id="toc-your-weekly-in-class-workflow" class="nav-link" data-scroll-target="#your-weekly-in-class-workflow">11. Your weekly in-class workflow</a></li>
+  <li><a href="#repository-rules-for-this-course" id="toc-repository-rules-for-this-course" class="nav-link" data-scroll-target="#repository-rules-for-this-course">12. Repository rules for this course</a>
+  <ul class="collapse">
+  <li><a href="#in-course-hub" id="toc-in-course-hub" class="nav-link" data-scroll-target="#in-course-hub">In <code>course-hub</code></a></li>
+  <li><a href="#in-your-tutorials-exercises-repository" id="toc-in-your-tutorials-exercises-repository" class="nav-link" data-scroll-target="#in-your-tutorials-exercises-repository">In your <code>tutorials-exercises</code> repository</a></li>
+  </ul></li>
+  <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">13. Troubleshooting</a>
+  <ul class="collapse">
+  <li><a href="#i-do-not-see-the-instructors-new-file" id="toc-i-do-not-see-the-instructors-new-file" class="nav-link" data-scroll-target="#i-do-not-see-the-instructors-new-file">I do not see the instructor’s new file</a></li>
+  <li><a href="#my-file-is-saved-but-it-is-not-on-github" id="toc-my-file-is-saved-but-it-is-not-on-github" class="nav-link" data-scroll-target="#my-file-is-saved-but-it-is-not-on-github">My file is saved, but it is not on GitHub</a></li>
+  <li><a href="#i-committed-but-github-does-not-show-the-new-work" id="toc-i-committed-but-github-does-not-show-the-new-work" class="nav-link" data-scroll-target="#i-committed-but-github-does-not-show-the-new-work">I committed, but GitHub does not show the new work</a></li>
+  <li><a href="#rstudio-says-there-is-nothing-to-commit" id="toc-rstudio-says-there-is-nothing-to-commit" class="nav-link" data-scroll-target="#rstudio-says-there-is-nothing-to-commit">RStudio says there is nothing to commit</a></li>
+  <li><a href="#i-cannot-find-my-project" id="toc-i-cannot-find-my-project" class="nav-link" data-scroll-target="#i-cannot-find-my-project">I cannot find my project</a></li>
+  </ul></li>
+  <li><a href="#one-sentence-workflow" id="toc-one-sentence-workflow" class="nav-link" data-scroll-target="#one-sentence-workflow">14. One-sentence workflow</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Week-01: GitHub Workflow Tutorial</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="working-with-course-hub-and-your-personal-tutorial-repository-tutorials-exercises." class="level2">
+<h2 class="anchored" data-anchor-id="working-with-course-hub-and-your-personal-tutorial-repository-tutorials-exercises.">Working with <code>course-hub</code> and your personal tutorial repository <code>tutorials-exercises</code>.</h2>
+<p><strong>Estimated time:</strong> 60-90 minutes</p>
+</section>
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>In this course, you will use two different GitHub repositories for in-class work (you will use others for homework assignments):</p>
+<ol type="1">
+<li><strong><code>course-hub</code></strong> contains course materials provided by the instructor.</li>
+<li><strong>Your personal tutorial repository</strong> contains the tutorials and exercises you complete during class.</li>
+</ol>
+<p>You will <strong>pull</strong> new materials from <code>course-hub</code>, but you will complete, save, commit, and push your work in your personal tutorial repository.</p>
+<hr>
+</section>
+<section id="learning-outcomes" class="level2">
+<h2 class="anchored" data-anchor-id="learning-outcomes">Learning outcomes</h2>
+<p>By the end of this tutorial, you will be able to:</p>
+<ul>
+<li>distinguish between the central course repository and your personal tutorial repository;</li>
+<li>explain the difference between a remote GitHub repository and a local repository on your computer;</li>
+<li>clone a repository from GitHub to your computer;</li>
+<li>pull updates from GitHub;</li>
+<li>copy course materials into the correct repository;</li>
+<li>review, stage, commit, and push changes;</li>
+<li>confirm that your work appears on GitHub; and</li>
+<li>reopen an existing RStudio Project without cloning it again.</li>
+</ul>
+</section>
+<section id="create-a-course-folder-on-your-computer" class="level1">
+<h1>1. Create a course folder on your computer</h1>
+<p>Call it <code>skill-building-in-R/</code>. This folder will house many GitHub repositories - the course-hub, the tutorials-exercises (on your personal account), and your homework repositories. For now, we will focus on the course-hub and the tutorials-exercises repositories.</p>
+<p><code>skill-building-in-R/</code> is your parent folder.</p>
+</section>
+<section id="understand-the-two-repositories" class="level1">
+<h1>2. Understand the two repositories</h1>
+<section id="central-course-repository-course-hub" class="level2">
+<h2 class="anchored" data-anchor-id="central-course-repository-course-hub">Central course repository: <code>course-hub</code></h2>
+<p>The instructor controls this repository. It contains template files for the tutorials and exercises.</p>
+<pre class="text"><code>skill-building-in-R/ 
+└── course-hub/
+    ├── course-hub.Rproj
+    ├── README.md
+    ├── week-01/
+    │   ├── tutorials/
+    │   └── exercises/
+    └── week-02/</code></pre>
+<p>A trailing <code>/</code> indicates that the item is a <strong>folder</strong>. In the above folder structure, skill-building-in-R/, course-hub/, week-01/, and week-02/ are all folders, not files. Files will have an extension, like <code>README.md</code>.</p>
+<p><code>course-hub.Rproj</code> is an Rproject file, something we will learn about next week.</p>
+<p><code>README.md</code> is a file - every repository (<code>course-hub</code>) should have a <code>README</code> file, which states what the repository holds. The extension <code>.md</code> just means it is a markdown file. A markdown file is a plain text file that uses a human-readable syntax to format text. We will learn more about markdown (and its newer cousin, quarto) next week.</p>
+<p>In the <code>week-01/</code> and <code>week-02/</code> folders (and for every week), there are subfolders for the tutorial templates and the exercises templates.</p>
+<p>In <code>course-hub</code>, you will:</p>
+<ul>
+<li>clone the repository once;</li>
+<li>pull updates before class;</li>
+<li>view course materials; and</li>
+<li>copy the tutorial and exercise files you need.</li>
+</ul>
+<p>You will <strong>not</strong> complete or save your work in <code>course-hub</code>, and you do not have the ability to push changes to it.</p>
+</section>
+<section id="personal-tutorial-repository" class="level2">
+<h2 class="anchored" data-anchor-id="personal-tutorial-repository">Personal tutorial repository</h2>
+<p>You will create one personal repository for all in-class tutorials and exercises during the semester. This will become a foundation of code you can refer back to later.</p>
+<p>You can name your tutorials-exercise repo:</p>
+<pre class="text"><code>tutorials-exercises</code></pre>
+<p>Your repository might eventually look like this:</p>
+<pre class="text"><code>skill-building-in-R/
+└── tutorials-exercises/
+    ├── README.md
+    ├── week-01/
+    │   ├── tutorials/
+    │   └── exercises/
+    ├── week-02/
+    │   ├── tutorials/
+    │   └── exercises/
+    └── tutorials-exercises.Rproj</code></pre>
+<p>In your personal tutorial repository, you will:</p>
+<ul>
+<li>copy tutorial and exercise templates from <code>course-hub</code>;</li>
+<li>complete tutorials and exercises;</li>
+<li>save your work;</li>
+<li>commit your changes; and</li>
+<li>push your work to GitHub.</li>
+</ul>
+<p>I will not be looking at or grading tutorials or exercises. These are for your own edification. However, your participation points will reflect your engagement during both.</p>
+<hr>
+</section>
+</section>
+<section id="remote-and-local-repositories" class="level1">
+<h1>3. Remote and local repositories</h1>
+<p>A repository on GitHub is the <strong>remote</strong> copy. The copy on your computer is the <strong>local</strong> copy.</p>
+<pre class="text"><code>GitHub
+remote repository stored online
+        ↓ clone or pull
+Your computer
+local repository opened in RStudio
+        ↑ push</code></pre>
+<p>Important terms:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Clone</strong></td>
+<td>Download a repository to your computer for the first time</td>
+</tr>
+<tr class="even">
+<td><strong>Pull</strong></td>
+<td>Download new changes into an existing local repository</td>
+</tr>
+<tr class="odd">
+<td><strong>Commit</strong></td>
+<td>Save a checkpoint in the repository history on your computer</td>
+</tr>
+<tr class="even">
+<td><strong>Push</strong></td>
+<td>Upload your local commits to GitHub</td>
+</tr>
+</tbody>
+</table>
+<p>You clone a repository only once per computer. After that, you reopen the existing project and pull updates.</p>
+<hr>
+</section>
+<section id="organize-your-course-folders" class="level1">
+<h1>4. Organize your course folders</h1>
+<p>Your repositories should be in the parent folder (next to one another), not inside one another.</p>
+<p>Recommended structure:</p>
+<pre class="text"><code>skill-building-in-R/
+├── course-hub/
+├── tutorials-exercises/
+├── homeworks
+    ├── homework-01-lastname/
+    └── homework-02-lastname/</code></pre>
+<p>Do <strong>not</strong> place one Git repository inside another.</p>
+<p>Incorrect:</p>
+<pre class="text"><code>course-hub/
+└── tutorials-exercises/</code></pre>
+<p>Correct:</p>
+<pre class="text"><code>skill-building-in-R/
+├── course-hub/
+└── tutorials-exercises/</code></pre>
+<hr>
+</section>
+<section id="clone-course-hub" class="level1">
+<h1>5. Clone <code>course-hub</code></h1>
+<p>You only need to do this once on each computer you use.</p>
+<section id="on-github" class="level2">
+<h2 class="anchored" data-anchor-id="on-github">On GitHub</h2>
+<ol type="1">
+<li>Open the <a href="https://github.com/fall2026-skill-building-in-R/course-hub">course-hub repository link</a></li>
+<li>Click the green <strong>Code</strong> button.</li>
+<li>Make sure <strong>HTTPS</strong> is selected.</li>
+<li>Copy the repository URL.</li>
+</ol>
+</section>
+<section id="in-rstudio" class="level2">
+<h2 class="anchored" data-anchor-id="in-rstudio">In RStudio</h2>
+<ol type="1">
+<li>Open RStudio.</li>
+<li>Select <strong>File → New Project</strong>.</li>
+<li>Select <strong>Version Control</strong>.</li>
+<li>Select <strong>Git</strong>.</li>
+<li>Paste the repository URL into <strong>Repository URL</strong>.</li>
+<li>Choose your <code>skill-building-in-R/</code> parent folder as the project directory.</li>
+<li>Click <strong>Create Project</strong>.</li>
+</ol>
+<p>RStudio will clone the repository and open the project. A course-hub folder will automatically be created through this process.</p>
+</section>
+<section id="check-your-work" class="level2">
+<h2 class="anchored" data-anchor-id="check-your-work">Check your work</h2>
+<p>Confirm that:</p>
+<ul>
+<li><code>course-hub</code> appears as the project name in the upper left-hand corner of RStudio;</li>
+<li>the Files pane shows the contents of <code>course-hub</code>;</li>
+<li>the Git pane is visible;</li>
+<li>course-hub folder was created in <code>skill-building-in-R/</code> folder; and</li>
+<li>you can locate the <code>week-01</code> folder.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="practice-pulling-an-instructor-update" class="level1">
+<h1>6. Practice pulling an instructor update</h1>
+<p>Your instructor will make a small change to <code>course-hub</code> during class.</p>
+<p>When instructed:</p>
+<ol type="1">
+<li>Go to <a href="https://github.com/fall2026-skill-building-in-R/course-hub">course-hub repository link</a> and note there is no file names <code>test.R</code></li>
+<li>Make sure the <code>course-hub</code> project is open in RStudio.</li>
+<li>Open the <strong>Git</strong> pane.</li>
+<li>Click <strong>Pull</strong>.</li>
+<li>Wait for the pull to finish.</li>
+<li>Locate <code>test.R</code>.</li>
+<li>Go back to <a href="https://github.com/fall2026-skill-building-in-R/course-hub">course-hub repository link</a> and note there is now a <code>test.R</code> file.</li>
+</ol>
+<section id="key-idea" class="level2">
+<h2 class="anchored" data-anchor-id="key-idea">Key idea</h2>
+<blockquote class="blockquote">
+<p>Clone once. Pull whenever the instructor updates the repository (pull at the start of class).</p>
+</blockquote>
+<p>Pulling does not create a second copy of the repository. It updates the local copy you already have.</p>
+<hr>
+</section>
+</section>
+<section id="create-your-personal-tutorial-repository" class="level1">
+<h1>7. Create your personal tutorial repository</h1>
+<p>Create this repository under your <strong>personal GitHub account</strong>, not inside <code>course-hub</code>. This is where you will copy over the templates for the tutorials and exercises, and complete, save, commit, and push them.</p>
+<section id="on-github-1" class="level2">
+<h2 class="anchored" data-anchor-id="on-github-1">On GitHub</h2>
+<ol type="1">
+<li><p>Go to GitHub.</p></li>
+<li><p>Click the <strong>+</strong> menu in the upper-right corner.</p></li>
+<li><p>Select <strong>New repository</strong>.</p></li>
+<li><p>Under <strong>Owner</strong>, select your personal GitHub account (this is likely already selected and you will only have options here if you are part of organizations).</p></li>
+<li><p>Name the repository:</p>
+<pre class="text"><code>tutorials-exercises</code></pre></li>
+<li><p>Add a short description, such as:</p>
+<pre class="text"><code>In-class tutorials and exercises for Skill Building in R</code></pre></li>
+<li><p>Choose a ‘repository visibility’ option. The repository visibility is asking whether you want this to be a private repo (only you and collaborators you add can see it) or public (anyone can see it). I usually keep in-progress analyses private and make them public when I submit the paper to the journal (so reviewers can see code) or a preprint server (so readers can see code). For this class, it does not matter as much - choose what you feel like.</p></li>
+<li><p>Check <strong>Add a README file</strong> (this is a description of the project, let’s look at some other README files).</p></li>
+<li><p>Click <strong>Create repository</strong>.</p></li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="clone-your-tutorial-repository" class="level1">
+<h1>8. Clone your tutorial repository</h1>
+<section id="on-github-2" class="level2">
+<h2 class="anchored" data-anchor-id="on-github-2">On GitHub</h2>
+<ol type="1">
+<li>Open your new tutorial repository.</li>
+<li>Click <strong>Code</strong>.</li>
+<li>Select <strong>HTTPS</strong>.</li>
+<li>Copy the repository URL.</li>
+</ol>
+</section>
+<section id="in-rstudio-1" class="level2">
+<h2 class="anchored" data-anchor-id="in-rstudio-1">In RStudio</h2>
+<ol type="1">
+<li>Select <strong>File → New Project</strong>.</li>
+<li>Select <strong>Version Control</strong>.</li>
+<li>Select <strong>Git</strong>.</li>
+<li>Paste the repository URL.</li>
+<li>Choose the same <code>skill-building-in-R/</code> parent folder used for <code>course-hub</code>.</li>
+<li>Click <strong>Create Project</strong>.</li>
+</ol>
+<p>Your repositories should now be side by side:</p>
+<pre class="text"><code>skill-building-in-R/
+├── course-hub/
+└── tutorials-exercises/</code></pre>
+<hr>
+</section>
+</section>
+<section id="copy-the-week-1-materials" class="level1">
+<h1>9. Copy the Week 1 materials</h1>
+<p>You will complete the tutorial in your personal tutorial repository, not in <code>course-hub</code> so you will need to copy the tutorial(s) and exercises for the week into your tutorials-exercises repository.</p>
+<section id="close-or-save-any-open-files" class="level2">
+<h2 class="anchored" data-anchor-id="close-or-save-any-open-files">Close or save any open files</h2>
+<p>Before copying files, save your work and close any files you are not using.</p>
+</section>
+<section id="using-finder-or-file-explorer" class="level2">
+<h2 class="anchored" data-anchor-id="using-finder-or-file-explorer">Using Finder or File Explorer</h2>
+<ol type="1">
+<li><p>Open the <code>course-hub</code> folder on your computer.</p></li>
+<li><p>Open <code>week-01</code>.</p></li>
+<li><p>Copy the <code>tutorials</code> and <code>exercises</code> folders.</p></li>
+<li><p>Open your personal <code>tutorials-exercises</code> folder.</p></li>
+<li><p>Create a folder named:</p>
+<pre class="text"><code>week-01</code></pre></li>
+<li><p>Paste the copied materials into <code>week-01</code>.</p></li>
+</ol>
+<p>Your personal repository should now look similar to course-hub, which looks like this for week-01:</p>
+<pre class="text"><code>skill-building-in-R/
+└── tutorials-exercises/
+    ├── README.md
+    └── week-01/
+        ├── tutorials/
+        │   └── tutorial-01-github.md
+        └── exercises/
+            └── exercises-01-github.md</code></pre>
+</section>
+</section>
+<section id="open-rstudio-as-if-you-are-just-starting-class" class="level1">
+<h1>10. Open Rstudio as if you are just starting class</h1>
+<p>When you open RStudio for a working session, you want to open it using the Rproject file.</p>
+<p>To practice this:</p>
+<ol type="1">
+<li>Quit RStudio so it is not open.</li>
+<li>Navigate to and open your tutorials-exercises/ folder.</li>
+<li>To open this project (and thus RStudio), click on the tutorials-exercises.Rproj file.</li>
+<li>Confirm that the project name in the upper left-hand corner of RStudio is tutorials-exercises and your files are there in the file pane.</li>
+</ol>
+<p>This is how you open RStudio. I always organize my work into RProjects and so when you click on the .Rproj file, it opens RStudio and your working directory is set to the folder (<code>tutorials-exercises/</code>). We will learn more about the <code>{here}</code> package next week which is used in conjunction with Rprojects to solve all working directory issues.</p>
+</section>
+<section id="your-weekly-in-class-workflow" class="level1">
+<h1>11. Your weekly in-class workflow</h1>
+<p>At the beginning of each class:</p>
+<ol type="1">
+<li>Open <code>course-hub</code>.</li>
+<li>Pull the latest instructor updates.</li>
+<li>Copy that week’s tutorial and exercise materials.</li>
+<li>Paste them into the matching week folder in your <code>tutorials-exercises</code> repository.</li>
+</ol>
+<p>Then, when it is time for the tutorials and exercises:</p>
+<ol start="5" type="1">
+<li>Open your <code>tutorials-exercises</code> RStudio Project.</li>
+<li>Complete the tutorial and exercises.</li>
+<li>Save your files.</li>
+<li>Review your changes in the Git pane.</li>
+<li>Stage the files you want to commit.</li>
+<li>Commit with an informative message.</li>
+<li>Push to GitHub.</li>
+<li>Verify that your work appears in the remote GitHub repository.</li>
+</ol>
+<p>For example, materials from:</p>
+<p><code>course-hub/week-03/tutorials/</code></p>
+<p>would be copied into:</p>
+<p><code>tutorials-exercises/week-03/tutorials/</code></p>
+<p>and materials from:</p>
+<p><code>course-hub/week-03/exercises/</code></p>
+<p>would be copied into:</p>
+<p><code>tutorials-exercises/week-03/exercises/</code></p>
+</section>
+<section id="repository-rules-for-this-course" class="level1">
+<h1>12. Repository rules for this course</h1>
+<section id="in-course-hub" class="level2">
+<h2 class="anchored" data-anchor-id="in-course-hub">In <code>course-hub</code></h2>
+<p>You should:</p>
+<ul>
+<li>pull updates;</li>
+<li>view course materials; and</li>
+<li>copy starter files.</li>
+</ul>
+<p>You should <strong>not</strong>:</p>
+<ul>
+<li>complete your work there;</li>
+<li>commit changes there; or</li>
+<li>push changes there.</li>
+</ul>
+</section>
+<section id="in-your-tutorials-exercises-repository" class="level2">
+<h2 class="anchored" data-anchor-id="in-your-tutorials-exercises-repository">In your <code>tutorials-exercises</code> repository</h2>
+<p>You should:</p>
+<ul>
+<li>complete tutorials and exercises;</li>
+<li>save your work;</li>
+<li>review your changes;</li>
+<li>commit meaningful checkpoints; and</li>
+<li>push regularly.</li>
+</ul>
+<p>Routine in-class tutorials and exercises do not require branches or pull requests unless your instructor specifically asks you to practice them.</p>
+</section>
+</section>
+<section id="troubleshooting" class="level1">
+<h1>13. Troubleshooting</h1>
+<section id="i-do-not-see-the-instructors-new-file" class="level2">
+<h2 class="anchored" data-anchor-id="i-do-not-see-the-instructors-new-file">I do not see the instructor’s new file</h2>
+<p>Confirm that:</p>
+<ul>
+<li>the <code>course-hub</code> project is open;</li>
+<li>you clicked <strong>Pull</strong>;</li>
+<li>the pull finished without an error; and</li>
+<li>you are looking in the correct week folder.</li>
+</ul>
+</section>
+<section id="my-file-is-saved-but-it-is-not-on-github" class="level2">
+<h2 class="anchored" data-anchor-id="my-file-is-saved-but-it-is-not-on-github">My file is saved, but it is not on GitHub</h2>
+<p>You may have saved the file without committing and pushing it.</p>
+<p>Check the Git pane and complete:</p>
+<p><strong>Review → Stage → Commit → Push</strong></p>
+<p>Then refresh the repository on GitHub.</p>
+</section>
+<section id="i-committed-but-github-does-not-show-the-new-work" class="level2">
+<h2 class="anchored" data-anchor-id="i-committed-but-github-does-not-show-the-new-work">I committed, but GitHub does not show the new work</h2>
+<p>You probably have not pushed the commit yet.</p>
+<p>Click <strong>Push</strong>, wait for it to finish, and then refresh GitHub.</p>
+</section>
+<section id="rstudio-says-there-is-nothing-to-commit" class="level2">
+<h2 class="anchored" data-anchor-id="rstudio-says-there-is-nothing-to-commit">RStudio says there is nothing to commit</h2>
+<p>Possible explanations:</p>
+<ul>
+<li>the file was not saved;</li>
+<li>you are looking at the wrong project;</li>
+<li>the file is outside the repository; or</li>
+<li>the change was already committed.</li>
+</ul>
+</section>
+<section id="i-cannot-find-my-project" class="level2">
+<h2 class="anchored" data-anchor-id="i-cannot-find-my-project">I cannot find my project</h2>
+<p>Do not clone the repository again immediately.</p>
+<p>Instead:</p>
+<ol type="1">
+<li>Find your <code>skill-building-in-R/</code> parent folder on your computer.</li>
+<li>Open the repository folder you want to work in.</li>
+<li>Double-click its <code>.Rproj</code> file.</li>
+</ol>
+<p>Remember:</p>
+<blockquote class="blockquote">
+<p>Clone once. After that, reopen the existing local repository.</p>
+</blockquote>
+</section>
+</section>
+<section id="one-sentence-workflow" class="level1">
+<h1>14. One-sentence workflow</h1>
+<blockquote class="blockquote">
+<p>Pull course materials from <code>course-hub</code>, copy them into your personal <code>tutorials-exercises</code> repository, complete your work there, and then review, stage, commit, and push your changes to GitHub.</p>
+</blockquote>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

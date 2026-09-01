@@ -1,0 +1,390 @@
+---
+title: "Week-01: GitHub Workflow Tutorial"
+format:
+  pdf:
+    toc: true
+editor: source
+---
+
+## Working with `course-hub` and your personal tutorial repository `tutorials-exercises`.
+
+**Estimated time:** 60-75 minutes
+
+## Background
+
+In this course, you will use two different GitHub repositories for in-class work (you will use others for homework assignments):
+
+1. **`course-hub`** contains course materials provided by the instructor.
+2. **Your personal tutorial repository** contains the tutorials and exercises you complete during class.
+
+You will **pull** new materials from `course-hub`, but you will complete, save, commit, and push your work in your personal tutorial repository.
+
+---
+
+## Learning outcomes
+
+By the end of this tutorial, you will be able to:
+
+- distinguish between the central course repository and your personal tutorial repository;
+- explain the difference between a remote GitHub repository and a local repository on your computer;
+- clone a repository from GitHub to your computer;
+- pull updates from GitHub;
+- copy course materials into the correct repository;
+- review, stage, commit, and push changes;
+- confirm that your work appears on GitHub; and
+- reopen an existing RStudio Project without cloning it again.
+
+
+# 1. Create a course folder on your computer
+
+Call it `skill-building-in-R/`. This folder will house many GitHub repositories - the course-hub, the tutorials-exercises (on your personal account), and your homework repositories. For now, we will focus on the course-hub and the tutorials-exercises repositories.
+
+`skill-building-in-R/` is your parent folder.
+
+# 2. Understand the two repositories
+
+## Central course repository: `course-hub`
+
+The instructor controls this repository. It contains template files for the tutorials and exercises. 
+
+```text
+skill-building-in-R/ 
+└── course-hub/
+    ├── course-hub.Rproj
+    ├── README.md
+    ├── week-01/
+    │   ├── tutorials/
+    │   └── exercises/
+    └── week-02/
+```
+
+A trailing `/` indicates that the item is a **folder**. In the above folder structure, skill-building-in-R/, course-hub/, week-01/, and week-02/ are all folders, not files. Files will have an extension, like `README.md`. 
+
+`course-hub.Rproj` is an Rproject file, something we will learn about next week.
+
+`README.md` is a file - every repository (`course-hub`) should have a `README` file, which states what the repository holds. The extension `.md` just means it is a markdown file. A markdown file is a plain text file that uses a human-readable syntax to format text. We will learn more about markdown (and its newer cousin, quarto) next week. 
+
+In the `week-01/` and `week-02/` folders (and for every week), there are subfolders for the tutorial templates and the exercises templates.
+
+
+In `course-hub`, you will:
+
+- clone the repository once;
+- pull updates before class;
+- view course materials; and
+- copy the tutorial and exercise files you need.
+
+You will **not** complete or save your work in `course-hub`, and you do not have the ability to push changes to it.
+
+## Personal tutorial repository
+
+You will create one personal repository for all in-class tutorials and exercises during the semester. This will become a foundation of code you can refer back to later.
+
+You can name your tutorials-exercise repo:
+
+```text
+tutorials-exercises
+```
+
+
+Your repository might eventually look like this:
+
+```text
+skill-building-in-R/
+└── tutorials-exercises/
+    ├── README.md
+    ├── week-01/
+    │   ├── tutorials/
+    │   └── exercises/
+    ├── week-02/
+    │   ├── tutorials/
+    │   └── exercises/
+    └── tutorials-exercises.Rproj
+```
+
+In your personal tutorial repository, you will:
+
+- copy tutorial and exercise templates from `course-hub`;
+- complete tutorials and exercises;
+- save your work;
+- commit your changes; and
+- push your work to GitHub.
+
+I will not be looking at or grading tutorials or exercises. These are for your own edification. However, your participation points will reflect your engagement during both. 
+
+---
+
+# 3. Remote and local repositories
+
+A repository on GitHub is the **remote** copy. The copy on your computer is the **local** copy.
+
+```text
+GitHub
+remote repository stored online
+        ↓ clone or pull
+Your computer
+local repository opened in RStudio
+        ↑ push
+```
+
+Important terms:
+
+| Term | Meaning |
+|---|---|
+| **Clone** | Download a repository to your computer for the first time |
+| **Pull** | Download new changes into an existing local repository |
+| **Commit** | Save a checkpoint in the repository history on your computer |
+| **Push** | Upload your local commits to GitHub |
+
+You clone a repository only once per computer. After that, you reopen the existing project and pull updates.
+
+---
+
+# 4. Organize your course folders
+
+Your repositories should be in the parent folder (next to one another), not inside one another.
+
+Recommended structure:
+
+```text
+skill-building-in-R/
+├── course-hub/
+├── tutorials-exercises/
+├── homeworks
+	├── homework-01-lastname/
+	└── homework-02-lastname/
+```
+
+Do **not** place one Git repository inside another.
+
+Incorrect:
+
+```text
+course-hub/
+└── tutorials-exercises/
+```
+
+Correct:
+
+```text
+skill-building-in-R/
+├── course-hub/
+└── tutorials-exercises/
+```
+
+---
+
+# 5. Clone `course-hub`
+
+You only need to do this once on each computer you use.
+
+## On GitHub
+
+1. Open the [course-hub repository link](https://github.com/fall2026-skill-building-in-R/course-hub)
+2. Click the green **Code** button.
+3. Make sure **HTTPS** is selected.
+4. Copy the repository URL.
+
+## In RStudio
+
+1. Open RStudio.
+2. Select **File → New Project**.
+3. Select **Version Control**.
+4. Select **Git**.
+5. Paste the repository URL into **Repository URL**.
+6. Choose your `skill-building-in-R/` parent folder as the project directory.
+7. Click **Create Project**.
+
+RStudio will clone the repository and open the project. A course-hub folder will automatically be created through this process.
+
+## Check your work
+
+Confirm that:
+
+- `course-hub` appears as the project name in the upper left-hand corner of RStudio;
+- the Files pane shows the contents of `course-hub`;
+- the Git pane is visible; 
+- course-hub folder was created in `skill-building-in-R/` folder; and
+- you can locate the `week-01` folder.
+
+---
+
+# 6. Practice pulling an instructor update
+
+Your instructor will make a small change to `course-hub` during class.
+
+When instructed:
+
+1. Go to [course-hub repository link](https://github.com/fall2026-skill-building-in-R/course-hub) and note there is no file named `test.R`
+2. Make sure the `course-hub` project is open in RStudio.
+2. Open the **Git** pane.
+3. Click **Pull**.
+4. Wait for the pull to finish.
+5. Locate `test.R`.
+6. Go back to [course-hub repository link](https://github.com/fall2026-skill-building-in-R/course-hub) and note there is now a `test.R` file.
+
+
+## Key idea
+
+> Clone once. Pull whenever the instructor updates the repository (pull at the start of class).
+
+Pulling does not create a second copy of the repository. It updates the local copy you already have.
+
+---
+
+# 7. Create your personal tutorial repository
+
+Create this repository under your **personal GitHub account**, not inside `course-hub`. This is where you will copy over the templates for the tutorials and exercises, and complete, save, commit, and push them. 
+
+## On GitHub
+
+1. Go to GitHub.
+2. Click the **+** menu in the upper-right corner.
+3. Select **New repository**.
+4. Under **Owner**, select your personal GitHub account (this is likely already selected and you will only have options here if you are part of organizations).
+5. Name the repository:
+
+   ```text
+   tutorials-exercises
+   ```
+
+6. Add a short description, such as:
+
+   ```text
+   In-class tutorials and exercises for Skill Building in R
+   ```
+
+7. Choose a 'repository visibility' option. The repository visibility is asking whether you want this to be a private repo (only you and collaborators you add can see it) or public (anyone can see it). I usually keep in-progress analyses private and make them public when I submit the paper to the journal (so reviewers can see code) or a preprint server (so readers can see code). For this class, it does not matter as much - choose what you feel like.
+8. Check **Add a README file** (this is a description of the project, let's look at some other README files).
+9. Click **Create repository**.
+
+---
+
+# 8. Clone your tutorial repository
+
+## On GitHub
+
+1. Open your new tutorial repository.
+2. Click **Code**.
+3. Select **HTTPS**.
+4. Copy the repository URL.
+
+## In RStudio
+
+1. Select **File → New Project**.
+2. Select **Version Control**.
+3. Select **Git**.
+4. Paste the repository URL.
+5. Choose the same `skill-building-in-R/` parent folder used for `course-hub`.
+6. Click **Create Project**.
+
+Your repositories should now be side by side:
+
+```text
+skill-building-in-R/
+├── course-hub/
+└── tutorials-exercises/
+```
+
+---
+
+# 9. Copy the Week 1 materials
+
+You will complete the tutorial in your personal tutorial repository, not in `course-hub` so you will need to copy the tutorial(s) and exercises for the week into your tutorials-exercises repository. 
+
+## Close or save any open files
+
+Before copying files, save your work and close any files you are not using.
+
+## Using Finder or File Explorer
+
+1. Open the `course-hub` folder on your computer.
+2. Open `week-01`.
+3. Copy the `tutorials` and `exercises` folders.
+4. Open your personal `tutorials-exercises` folder.
+5. Create a folder named:
+
+   ```text
+   week-01
+   ```
+
+6. Paste the copied materials into `week-01`.
+
+Your personal repository should now look similar to course-hub, which looks like this for week-01:
+
+```text
+skill-building-in-R/
+└── tutorials-exercises/
+    ├── README.md
+    └── week-01/
+        ├── tutorials/
+        │   └── tutorial-01-github.md
+        └── exercises/
+            └── exercises-01-github.md
+```
+
+# 10. Open Rstudio as if you are just starting class
+
+When you open RStudio for a working session, you want to open it using the Rproject file. 
+
+To practice this:
+
+1. Quit RStudio so it is not open.
+2. Navigate to and open your tutorials-exercises/ folder.
+3. To open this project (and thus RStudio), click on the tutorials-exercises.Rproj file. 
+4. Confirm that the project name in the upper left-hand corner of RStudio is tutorials-exercises and your files are there in the file pane.
+
+This is how you open RStudio. I always organize my work into RProjects and so when you click on the .Rproj file, it opens RStudio and your working directory is set to the folder (`tutorials-exercises/`). We will learn more about the `{here}` package next week which is used in conjunction with Rprojects to solve all working directory issues. 
+
+
+# 11. Your weekly in-class workflow
+
+At the beginning of each class:
+
+1. Open `course-hub`.
+2. Pull the latest instructor updates.
+3. Copy that week's tutorial and exercise materials.
+4. Paste them into the matching week folder in your `tutorials-exercises` repository.
+
+Then:
+
+5. Open your `tutorials-exercises` RStudio Project.
+6. Complete the tutorial and exercises.
+7. Save your files.
+8. Review your changes in the Git pane.
+9. Stage the files you want to commit.
+10. Commit with an informative message.
+11. Push to GitHub.
+12. Verify that your work appears in the remote GitHub repository.
+
+
+# 12. Repository rules for this course
+
+## In `course-hub`
+
+You should:
+
+- pull updates;
+- view course materials; and
+- copy starter files.
+
+You should **not**:
+
+- complete your work there;
+- commit changes there; or
+- push changes there.
+
+## In your `tutorials-exercises` repository
+
+You should:
+
+- complete tutorials and exercises;
+- save your work;
+- review your changes;
+- commit meaningful checkpoints; and
+- push regularly.
+
+
+# 13. One-sentence workflow
+
+> Pull course materials from `course-hub`, copy them into your personal `tutorials-exercises` repository, complete your work there, and then review, stage, commit, and push your changes to GitHub.
