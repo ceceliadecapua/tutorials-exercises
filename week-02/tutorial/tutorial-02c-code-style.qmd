@@ -1,0 +1,705 @@
+---
+title: "Tutorial: Writing Clear and Consistent R Code"
+subtitle: "An introduction to the tidyverse style guide"
+author: "Dr. Jennifer Bigman"
+format:
+  html:
+    toc: true
+    number-sections: true
+    code-copy: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: source
+---
+
+## Overview
+
+Good code should not only run—it should also be easy to read, understand, and revise.
+
+A style guide provides consistent rules for writing and organizing code. These rules reduce the number of small formatting decisions you need to make and make it easier for other people—and future you—to understand your work.
+
+This tutorial introduces the main recommendations in the [tidyverse style guide](https://style.tidyverse.org/).
+
+### Learning objectives
+
+By the end of this tutorial, you should be able to:
+
+1.  Create clear file and object names.
+2.  Use consistent spacing and indentation.
+3.  Format function calls and long lines.
+4.  Organize scripts with comments and section headings.
+5.  Use tools that automatically check or improve code style.
+
+## Setup
+
+The first step is to install and load the tidyverse packages. You only have to install packages one time (and each time you update RStudio) but you have to load the package each time you start a new R session.
+
+```{r}
+pak::pkg_install("tidyverse") # one time, alternative to install.packages()
+library(tidyverse)
+```
+
+We will use the `starwars` dataset, which is included with the tidyverse.
+
+```{r}
+starwars
+```
+
+Although indentation is not included in the tidyverse style guide, it makes it easier to read code. If you are not using quarto, (i.e., you are using a regular R script, .R), please indent one tab for the first line and then keep indenting. This example uses pipes (\|\>), which we will use extensively but not yet. This code is just to show you how to indent on multiple lines so do not worry about the pipes yet.
+
+```{r}
+
+	glimpse(starwars)
+
+	starwars |>
+		select(name,
+					 height,
+					 mass, 
+					 birth_year) |>
+		mutate(year = birth_year)
+
+```
+
+::: callout-note
+## Style versus correctness
+
+These two lines both produce the same result:
+
+```{r}
+	mean(c(4,8,12))
+```
+
+```{r}
+	mean(c(4, 8, 12))
+```
+
+The second line is easier to read because it uses consistent spacing. Style usually does not change what the code does, but it changes how easily people can understand it.
+:::
+
+# File names
+
+File names should be:
+
+- descriptive;
+- machine readable;
+- written in lowercase;
+- free of spaces and special characters; and
+- ordered clearly when files must be run in sequence.
+
+Use either hyphens or underscores to separate words.
+
+## Good file names
+
+``` text
+01-load-data.R
+02-clean-data.R
+03-create-figures.R
+homework-01.R
+fish-survey-analysis.qmd
+```
+
+## File names to avoid
+
+``` text
+Load Data.R
+code.R
+final_analysis_FINAL.R
+Homework1.r
+my file!!.R
+```
+
+Avoid words such as `final`, `new`, or `updated`. Git records previous versions, so file names do not need to describe their revision history.
+
+Instead of:
+
+``` text
+analysis-final.R
+analysis-final-2.R
+analysis-really-final.R
+```
+
+use one file:
+
+``` text
+02-analysis.R (presumably, 01 is taken for 01-data wrangling)
+```
+
+and use Git commits to track its history.
+
+## Your turn 1: Improve file names
+
+Rewrite each file name so that it follows the style guide.
+
+``` text
+My Homework 1.R
+FINAL analysis.r
+DataCleaningScript.R
+figure 2 final.PNG
+```
+
+Write your revised names below:
+
+``` text
+1.
+2.
+3.
+4.
+```
+
+# Object names
+
+Object names should:
+
+- use lowercase letters;
+- separate words with underscores;
+- be descriptive but concise; and
+- describe the contents of the object.
+
+This naming system is called **snake case**.
+
+## Good object names
+
+```{r}
+	fish_length <- 42
+
+	mean_length <- 35.7
+	
+	survey_data <- data.frame()
+```
+
+## Object names to avoid
+
+``` r
+FishLength <- 42
+   
+fish.length <- 42
+
+fl <- 42
+
+x1 <- 42
+```
+
+Variable names are usually **nouns** because they hold things:
+
+```{r}
+	water_temperature <- 17.4
+
+	species_names <- c("cod", "haddock", "hake")
+```
+
+Function names are usually **verbs** because functions do things:
+
+```{r}
+	calculate_mean <- function(x) {
+	  mean(x, na.rm = TRUE)
+	}
+```
+
+Avoid reusing the names of common R functions:
+
+``` r
+# Avoid
+mean <- 10
+c <- 4
+data <- 20
+```
+
+Doing so can make later code confusing or cause errors.
+
+## Your turn 2: Improve object names
+
+Rewrite these object names using descriptive snake case:
+
+``` r
+Temp <- 18.5
+AvgFishWt <- 2.4
+x <- c("cod", "haddock", "hake")
+```
+
+```{r}
+	# Write your improved code here
+```
+
+# Assignment
+
+Use `<-` to assign a value to an object.
+
+```{r}
+	fish_length <- 42
+```
+
+Avoid using `=` for object assignment:
+
+``` r
+# Avoid
+fish_length = 42
+```
+
+Use `=` when naming arguments inside a function call:
+
+```{r}
+	mean(c(10, 15, NA), na.rm = TRUE)
+```
+
+This distinction helps readers identify whether you are creating an object or supplying a function argument.
+
+# Spacing
+
+Consistent spacing makes the structure of code easier to see.
+
+## Commas
+
+Place a space after a comma, but not before it.
+
+```{r}
+	fish_length <- c(24, 31, 28, 35)
+```
+
+Avoid:
+
+``` r
+	fish_length <- c(24,31,28,35)
+
+	fish_length <- c(24 , 31 , 28 , 35)
+```
+
+## Operators
+
+Place a space on both sides of common operators:
+
+```{r}
+	mean_length <- (24 + 31 + 28 + 35) / 4
+
+	large_fish <- fish_length > 30
+
+	length_mm <- fish_length * 10
+```
+
+This applies to operators such as:
+
+``` text
++  -  *  /  <-  ==  !=  <  >  <=  >=
+```
+
+Avoid:
+
+``` r
+mean_length<-(24+31+28+35)/4
+
+large_fish<-fish_length>30
+```
+
+Do not add spaces around `^`:
+
+```{r}
+	radius <- 4
+	
+	circle_area <- pi * radius^2
+```
+
+## Parentheses
+
+Do not place spaces immediately inside parentheses:
+
+```{r}
+	mean(fish_length)
+```
+
+Avoid:
+
+``` r
+mean( fish_length )
+mean (fish_length)
+```
+
+## Named arguments
+
+Place one space on both sides of `=` when naming an argument:
+
+```{r}
+	round(pi, digits = 2)
+
+	mean(c(1, 2, NA), na.rm = TRUE)
+```
+
+Avoid:
+
+``` r
+round(pi, digits=2)
+mean(c(1, 2, NA), na.rm=TRUE)
+```
+
+## Your turn 3: Repair the spacing
+
+Rewrite the code below using consistent spacing and indentation.
+
+``` r
+fish_mass<-c(1.2,1.5,NA,1.8,2.1)
+mean_mass<-mean(fish_mass,na.rm=TRUE)
+large_mass<-fish_mass>1.5
+```
+
+```{r}
+	# Write the improved code here
+```
+
+# Character and logical values
+
+Use double quotation marks for character values:
+
+```{r}
+	species <- c("cod", "haddock", "hake")
+```
+
+Prefer:
+
+``` r
+"cod"
+```
+
+rather than:
+
+``` r
+'cod'
+```
+
+Use the complete logical values `TRUE` and `FALSE`:
+
+```{r}
+	survey_complete <- TRUE
+
+	missing_station <- FALSE
+```
+
+Avoid abbreviating them as `T` and `F` because those letters can be reassigned to other values.
+
+# Function calls
+
+## Use complete argument names
+
+When changing a function's default behavior, write the complete argument name.
+
+```{r}
+	mean(c(10, 12, NA), na.rm = TRUE)
+
+	round(pi, digits = 3)
+
+	rep(1:3, times = 2)
+```
+
+Avoid partial argument names:
+
+``` r
+mean(c(10, 12, NA), na = TRUE)
+round(pi, dig = 3)
+rep(1:3, t = 2)
+```
+
+Complete argument names make the code easier to understand and less likely to break.
+
+## Format long function calls vertically
+
+A short function call can remain on one line:
+
+```{r}
+	mean(fish_length, na.rm = TRUE)
+```
+
+When a function call becomes difficult to read, place each argument on its own line:
+
+```{r}
+	survey_data <- tibble(
+		station = c("A", "B", "C", "D"),
+	  species = c("cod", "haddock", "cod", "hake"),
+	  length_cm = c(41, 33, 38, 27),
+	  caught = c(TRUE, TRUE, FALSE, TRUE)
+	)
+
+	survey_data
+```
+
+Notice that:
+
+- each argument begins on a new line but not spaces between the lines;
+- arguments are indented by two spaces (= to a tab);
+- commas remain at the end of each argument; and
+- the closing parenthesis is on its own line.
+
+## Keep lines reasonably short
+
+The tidyverse style guide recommends keeping lines to approximately 80 characters when practical.
+
+Instead of:
+
+``` r
+survey_summary <- summarise(survey_data, mean_length = mean(length_cm), maximum_length = max(length_cm), number_caught = sum(caught))
+```
+
+write:
+
+```{r}
+	survey_summary <- summarise(
+	  survey_data,
+	  mean_length = mean(length_cm),
+	  maximum_length = max(length_cm),
+	  number_caught = sum(caught)
+	)
+
+	survey_summary
+```
+
+# Comments and script organization
+
+## Write comments with a space
+
+Begin comments with `#` followed by one space:
+
+``` r
+    # calculate the mean while excluding missing observations
+    mean_mass <- mean(fish_mass, na.rm = TRUE)
+```
+
+Avoid:
+
+``` r
+    #calculate mean
+    mean_mass <- mean(fish_mass, na.rm = TRUE)
+```
+
+## Explain why, not what
+
+Comments are most useful when they explain a decision.
+
+Less useful:
+
+``` r
+    # filter the data
+    adult_fish <- fish_data |>
+      filter(age >= 3)
+```
+
+More useful:
+
+``` r
+    # restrict the analysis to reproductively mature fish
+    adult_fish <- fish_data |>
+      filter(age >= 3)
+```
+
+The code already shows that the data are being filtered. The comment explains why age three was used.
+
+## Use section headings
+
+Organize longer scripts with section headings:
+
+``` r
+	#### load packages ####
+	library(tidyverse)
+
+	#### import data ####
+	survey_data <- read_csv("data/survey-data.csv")
+
+	#### clean data ####
+	clean_data <- survey_data |>
+		filter(!is.na(length_cm))
+
+	#### summarize data ####
+	length_summary <- clean_data |>
+	  summarise(
+	    mean_length = mean(length_cm),
+	    sample_size = n())
+
+	#### create figures ####
+```
+
+RStudio recognizes headings written with four or more `#` symbols. You can use the document outline to move between sections.
+
+A second common section style is:
+
+``` r
+# load packages --------------------------
+# import data ----------------------------
+# clean data -----------------------------
+# create figures -------------------------
+```
+
+Note the use of lowercase letters only. Choose one style and use it consistently.
+
+## Blank lines
+
+Use two blank line to separate related groups of code.
+
+```{r}
+	fish_length <- c(24, 31, 28, 35)
+	
+	fish_mass <- c(1.2, 1.5, 1.4, 1.8)
+
+
+	mean_length <- mean(fish_length)
+
+	mean_mass <- mean(fish_mass)
+```
+
+Avoid inserting several blank lines between every line of code. Blank lines should work like paragraph breaks: they separate ideas.
+
+# Functions
+
+Use verbs for function names because functions perform actions.
+
+```{r}
+	calculate_cv <- function(x) {
+	  sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)
+	}
+
+	calculate_cv(fish_length)
+```
+
+For a multiline function:
+
+- place `{` at the end of the first line;
+- indent the body by two spaces; and
+- place `}` on its own line.
+
+```{r}
+	# function to convert cm to mm
+	convert_cm_to_mm <- function(length_cm) {
+	  length_mm <- length_cm * 10
+	  length_mm
+	}
+
+	convert_cm_to_mm(fish_length)
+```
+
+Avoid:
+
+``` r
+convert_cm_to_mm <- function(length_cm)
+{
+length_mm <- length_cm * 10
+return(length_mm)}
+```
+
+## Your turn 6: Restyle a function
+
+Rewrite the function below using tidyverse style:
+
+``` r
+FishMean=function(x){result=mean(x,na.rm=TRUE);return(result)}
+```
+
+```{r}
+	# Write the improved function here
+```
+
+# Automated formatting tools
+
+Two R packages can help you apply and check the tidyverse style guide:
+
+- `styler` automatically reformats R code. It will not indent though - do this yourself.
+- `lintr` identifies possible style problems.
+
+## `styler`
+
+Install the package once:
+
+``` r
+install.packages("styler")
+
+pak::pak("styler")
+```
+
+Do not run the installation command every time you open R.
+
+After installation, you can format a script with:
+
+``` r
+styler::style_file("analysis.R")
+```
+
+You can also use the **Style active file** add-in in RStudio:
+
+``` text
+Addins → Style active file
+```
+
+::: callout-warning
+`styler` changes the file. Commit your work before styling a large script so that Git can show you exactly what changed.
+:::
+
+## `lintr`
+
+Install the package once:
+
+``` r
+install.packages("lintr")
+```
+
+Check the active project with:
+
+``` r
+lintr::lint_dir()
+```
+
+`lintr` reports possible style issues but does not automatically change the code.
+
+# Final practice: Restyle an analysis
+
+The code below runs, but it does not follow the style guide.
+
+Rewrite it so that it is clear, consistent, and easy to read.
+
+``` r
+library(tidyverse)
+HumanData=starwars |> filter(species=="Human",!is.na(height),!is.na(mass))
+summary_data=HumanData |> summarise(MeanHeight=mean(height),MeanMass=mean(mass),N=n())
+ggplot(HumanData,aes(x=height,y=mass))+geom_point(size=3)+labs(x="Height",y="Mass",title="Human characters")+theme_minimal()
+summary_data
+```
+
+Your revised code should:
+
+1.  Use snake case for object and column names.
+2.  Use `<-` for assignment.
+3.  Add appropriate spaces.
+4.  Put each pipe step on its own line.
+5.  Format long function calls vertically.
+6.  Put each `ggplot2` layer on its own line.
+
+```{r}
+	# Write your revised analysis here
+```
+
+# Style checklist
+
+Before committing and pushing a script, check that:
+
+- [ ] File names are descriptive, lowercase, and contain no spaces.
+- [ ] Indentation is used.
+- [ ] Object names use snake case.
+- [ ] Assignment uses `<-`.
+- [ ] Commas are followed by spaces.
+- [ ] Operators have spaces on both sides.
+- [ ] Function arguments use complete names.
+- [ ] Long function calls are formatted across multiple lines.
+- [ ] Pipe steps appear on separate lines.
+- [ ] `ggplot2` layers appear on separate lines.
+- [ ] Comments explain important decisions.
+- [ ] The script is divided into clear sections.
+- [ ] The entire script runs from top to bottom.
+
+# Key takeaway
+
+Code style does not replace correct analysis, but consistent style makes correct analysis easier to inspect, reproduce, review, and maintain.
+
+# Resources
+
+- [Tidyverse style guide](https://style.tidyverse.org/)
+- [Files](https://style.tidyverse.org/files.html)
+- [Syntax](https://style.tidyverse.org/syntax.html)
+- [Functions](https://style.tidyverse.org/functions.html)
+- [Pipes](https://style.tidyverse.org/pipes.html)
+- [`ggplot2`](https://style.tidyverse.org/ggplot2.html)

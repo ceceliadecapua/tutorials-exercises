@@ -1,0 +1,207 @@
+---
+title: "Introduction to Quarto"
+format:
+  html:
+    toc: true
+    embed-resources: true
+editor: source
+---
+
+## Learning outcomes
+
+By the end of this tutorial, you will be able to:
+
+- explain the difference between a Quarto source file and its rendered output;
+- recognize the main parts of a Quarto document;
+- add headings, text, lists, and inline code;
+- add and run a simple R code chunk; and
+- render a `.qmd` file to HTML.
+
+## 1. What is Quarto?
+
+Quarto lets you combine:
+
+- written explanations;
+- formatted text;
+- R code;
+- code output;
+- tables; and
+- figures
+
+in one reproducible document.
+
+A Quarto source file ends in:
+
+```text
+.qmd
+```
+
+When you render the file, Quarto creates a finished document such as:
+
+```text
+.html
+```
+
+::: {.callout-important}
+Edit the `.qmd` file, not the rendered `.html` file.
+:::
+
+## 2. Examine the YAML header
+
+The information at the top of this document is called the **YAML header**:
+
+```yaml
+---
+title: "Introduction to Quarto"
+format:
+  html:
+    toc: true
+    embed-resources: true
+editor: source
+---
+```
+
+The YAML header controls how the document is rendered.
+
+- `title` sets the document title.
+- `format: html` creates an HTML document.
+- `toc: true` adds a table of contents.
+- `embed-resources: true` puts supporting files inside the HTML file.
+- `editor: source` opens the document in source mode.
+
+::: {.callout-note}
+The opening and closing `---` lines belong only around the YAML header at the top of the document.
+:::
+
+## 3. Add formatted text
+
+Quarto uses Markdown syntax for text formatting.
+
+Type the following below this section:
+
+```markdown
+### About me
+
+My name is **Your Name**.
+
+I am interested in *your research interest*.
+
+One thing I want to learn in this course is `your answer`.
+```
+
+Replace the placeholder text with your own information.
+
+### Common Markdown syntax
+
+| What you want | What you type |
+|---|---|
+| Heading | `## Heading` |
+| Bold text | `**bold text**` |
+| Italic text | `*italic text*` |
+| Inline code | `` `read_csv()` `` |
+| Bullet | `- item` |
+| Numbered item | `1. item` |
+| Link | `[Quarto](https://quarto.org)` |
+
+## 4. Add a list
+
+Add a heading and a short list:
+
+```markdown
+### Files in my course project
+
+- `course-hub/`
+- `tutorials-exercises/`
+- `homework-repos/`
+```
+
+A trailing `/`, such as in `course-hub/`, indicates a folder.
+
+## 5. Add an R code chunk
+
+A code chunk lets you include executable R code inside a Quarto document.
+
+Insert a new R code chunk using:
+
+- **Mac:** `Option + Command + I`
+- **Windows:** `Ctrl + Alt + I`
+
+Then enter:
+
+```{r}
+message <- "Hello, Quarto!"
+message
+```
+
+Click the green triangle in the upper-right corner of the chunk to run it.
+
+You should see:
+
+```text
+[1] "Hello, Quarto!"
+```
+
+::: {.callout-note}
+You do not need to understand every part of this R code yet. The goal is to see how code and output can appear together in one document.
+:::
+
+## 6. Render the document
+
+To create the finished HTML document:
+
+1. Save the `.qmd` file.
+2. Click **Render** at the top of the Source pane.
+3. Wait for Quarto to finish.
+4. View the rendered HTML document.
+
+Rendering checks the document from top to bottom and creates:
+
+```text
+tutorial-01-quarto.html
+```
+
+Quarto creates a separate `_files/` folder that contains required CSS, JavaScript, images, and other dependencies. Don't worry about this folder - you don't need to touch it or move it.
+
+## 7. Make one change and render again
+
+Return to the `.qmd` file and add:
+
+```markdown
+### One thing I learned
+
+Write one sentence about Quarto here.
+```
+
+Then:
+
+1. Save the file.
+2. Render it again.
+3. Confirm that the new section appears in the HTML output.
+
+## 8. Save your work with Git
+
+In the Git pane:
+
+1. Review the changed `.qmd` and `.html` files.
+2. Check the boxes beside the files you want to commit.
+3. Click **Commit**.
+4. Use a message such as:
+
+```text
+complete Quarto tutorial
+```
+
+5. Click **Push**.
+
+## Completion checklist
+
+- [ ] I know that `.qmd` is the editable source file.
+- [ ] I know that `.html` is the rendered output.
+- [ ] I added formatted text using Markdown.
+- [ ] I added and ran an R code chunk.
+- [ ] I rendered the document successfully.
+- [ ] I committed and pushed my work.
+
+## One-sentence summary
+
+> Quarto combines text, code, output, and figures in one reproducible document.

@@ -1,0 +1,856 @@
+---
+title: "Tutorial 2: Getting Started with R: Coding Basics"
+author: "Dr. Jennifer Bigman"
+format:
+  html:
+    toc: true
+    number-sections: true
+    code-copy: true
+    code-overflow: wrap
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: source
+---
+
+## Learning objectives
+
+By the end of this tutorial, you should be able to:
+
+1.  Run R code from a Quarto document.
+2.  Use R as a calculator.
+3.  Create and inspect objects.
+4.  Create vectors and perform vectorized calculations.
+5.  Call functions and change their arguments.
+6.  Recognize common errors involving spelling, capitalization, and punctuation.
+7.  Create and inspect a simple data frame.
+8.  Find help when you do not know how a function works.
+
+## Before you begin
+
+1.  Copy this file from the central course-hub repository into your personal tutorials-exercises repository.
+2.  Open the copied `.qmd` file in RStudio.
+3.  Run the code as you work through the tutorial.
+4.  Save, render, commit, and push your completed copy (it will be in your personal tutorials-exercises repository).
+
+::: callout-tip
+### Useful RStudio shortcuts
+
+| Action | Mac | Windows/Linux |
+|------------------------|------------------------|------------------------|
+| Run the current line or selection | `Command + Enter` | `Ctrl + Enter` |
+| Insert an R code chunk | `Option + Command + I` | `Ctrl + Alt + I` |
+| Insert the assignment operator `<-` | `Option + -` | `Alt + -` |
+| Show all keyboard shortcuts | `Option + Shift + K` | `Alt + Shift + K` |
+:::
+
+## R, RStudio, and Quarto
+
+These tools work together, but they are not the same thing:
+
+- **R** is the programming language that performs calculations and analyses.
+- **RStudio** is the integrated development environment, or IDE, where we write and run R code.
+- **Quarto** combines text, code, results, figures, and tables in one reproducible document. We will be using Quarto for the in-class tutorials, but we will NOT be using it for the in-class exercises or out-of-class homework. This is intentional - you want experience with both.
+
+In quarto, an R code chunk begins and ends with three backticks:
+
+```{r}
+2 + 2
+```
+
+Place your cursor inside the chunk and use the run shortcut to execute the code.
+
+## Use R as a calculator
+
+Run the following code one line at a time.
+
+```{r}
+2 + 2
+
+10 - 3
+
+6 * 4
+
+20 / 5
+
+2^3
+```
+
+R follows the usual order of operations.
+
+```{r}
+2 + 3 * 4
+
+(2 + 3) * 4
+```
+
+R also includes many mathematical functions.
+
+```{r}
+sqrt(16)
+
+log(1)
+
+log10(100)
+
+round(3.14159, digits = 2)
+```
+
+### Your turn 1 (will go through answers at end!)
+
+Calculate each of the following:
+
+1.  The mean of 12, 18, and 27.
+2.  The area of a circle with radius 4.
+3.  The square root of 225.
+4.  (2^5).
+
+```{r}
+# Write your code here
+mean(c(12,18,27))
+pi * 4/2
+sqrt(225)
+2^5
+```
+
+## Save your code regularly after you make changes. Now is a good time to do so.
+
+### Press Ctrl + S, click the disk button at the top, or file --> save
+
+## Comments
+
+R ignores any text on the same line after `#`. Comments help us understand the reasoning behind the code.
+
+```{r}
+# convert a water temperature from Celsius to Fahrenheit
+12 * (9 / 5) + 32
+```
+
+Useful comments explain **why** a step was taken or describe the purpose of a section. Avoid comments that merely repeat obvious code.
+
+```{r}
+# remove a missing value before calculating the mean
+fish_mass <- c(1.2, 1.5, NA, 1.8)
+valid_mass <- fish_mass[!is.na(fish_mass)]
+mean(valid_mass)
+
+# do this another way
+fish_mass <- c(1.2, 1.5, NA, 1.8)
+mean(fish_mass, na.rm = TRUE)
+```
+
+## Objects and assignment
+
+Most analyses involve saving values so that they can be used later. Here, we create an object with the assignment operator `<-`.
+
+```{r}
+water_temp <- 12
+```
+
+R stores the value but does not automatically print it. Type the object's name to inspect it.
+
+```{r}
+water_temp
+```
+
+Use the object in another calculation.
+
+```{r}
+water_temp_f <- water_temp * (9 / 5) + 32
+water_temp_f
+```
+
+### Naming objects
+
+Use informative names written in `snake_case`:
+
+```{r}
+mean_fish_length <- 31.5
+sampling_year <- 2026
+study_region <- "Delaware Bay"
+```
+
+Good names describe what an object contains.
+
+``` text
+Good: mean_fish_length
+Poor:  x
+Poor:  thing
+Poor:  result2
+```
+
+Object names:
+
+- must begin with a letter;
+- may contain letters, numbers, `_`, and `.`;
+- cannot contain spaces; and
+- are case-sensitive.
+
+```{r}
+fish_length <- 30
+fish_length
+```
+
+The following names refer to different objects:
+
+```{r}
+fish_length <- 30
+Fish_length <- 45
+
+fish_length
+Fish_length
+```
+
+### Your turn 2
+
+Create objects containing:
+
+1.  Your first name.
+2.  The current year.
+3.  A water temperature of 14.5 °C.
+4.  The same temperature converted to Fahrenheit.
+
+Use descriptive `snake_case` names.
+
+```{r}
+# Write your code here
+my_name <- "Cecelia"
+current_year <- 2026
+water_temp_f <- 14.5
+water_temp_c <- 14.5* (9/5) + 32
+```
+
+## Vectors
+
+A vector stores multiple values of the same basic type. Use `c()` to combine values.
+
+```{r}
+fish_lengths <- c(24, 31, 29, 35, 42)
+fish_lengths
+```
+
+R applies arithmetic to every element of a numeric vector.
+
+```{r}
+fish_lengths + 1
+
+fish_lengths * 2
+
+fish_lengths / 10
+```
+
+This behavior is called **vectorization**.
+
+You can subset vectors.
+
+```{r}
+
+	animals <- c("mouse", "rat", "dog", "cat")
+
+	animals[2] # return second element
+	
+	animals[c(3, 2)] # return second and third elements
+
+	
+	weight_g <- c(21, 34, 39, 54, 55)
+	
+	weight_g > 50 # return logicals with TRUE for the indices that are > 50
+	
+	weight_g[weight_g > 50] # select values > 50
+	
+```
+
+
+### Common summary functions
+
+```{r}
+length(fish_lengths)
+
+sum(fish_lengths)
+
+mean(fish_lengths)
+
+min(fish_lengths)
+
+max(fish_lengths)
+
+range(fish_lengths)
+```
+
+### Logical comparisons
+
+Comparisons return `TRUE` or `FALSE`.
+
+```{r}
+fish_lengths > 30
+
+fish_lengths == 29
+
+fish_lengths != 29
+```
+
+Common comparison operators are:
+
+| Operator | Meaning                  |
+|----------|--------------------------|
+| `>`      | greater than             |
+| `<`      | less than                |
+| `>=`     | greater than or equal to |
+| `<=`     | less than or equal to    |
+| `==`     | equal to                 |
+| `!=`     | not equal to             |
+
+::: callout-warning
+Use `==` to test equality. A single `=` is generally used to provide named arguments inside functions.
+:::
+
+Count how many fish are longer than 30 cm.
+
+```{r}
+sum(fish_lengths > 30)
+```
+
+Subset a vector using square brackets.
+
+```{r}
+fish_lengths[fish_lengths > 30]
+```
+
+### Your turn 3
+
+Create this vector of water temperatures:
+
+```{r}
+temperatures <- c(8.2, 10.5, 12.1, 9.8, 14.3, 11.6)
+```
+
+Then calculate:
+
+1.  The number of observations.
+2.  The mean temperature.
+3.  The minimum and maximum temperatures.
+4.  How many temperatures are greater than 11 °C.
+5.  A vector containing only temperatures greater than 11 °C.
+
+```{r}
+# Write your code here
+length(temperatures)
+mean(temperatures)
+min(temperatures)
+max(temperatures)
+sum(temperatures>11)
+temperatures[temperatures>11]
+```
+
+## Functions and arguments
+
+Functions perform actions. A function call generally has this structure:
+
+``` text
+function_name(argument1 = value1, argument2 = value2)
+```
+
+For example, `round()` takes a number and an argument controlling the number of decimal places.
+
+```{r}
+round(3.14159, digits = 2)
+
+round(3.14159, digits = 4)
+```
+
+Some arguments have default values. You only need to supply an argument when you want to change the default behavior.
+
+```{r}
+seq(from = 1, to = 10)
+
+seq(from = 1, to = 10, by = 2)
+```
+
+You can often omit the names of the first arguments:
+
+```{r}
+seq(1, 10, by = 2)
+```
+
+Using argument names is often clearer for beginners and for less familiar functions.
+
+### Missing values
+
+R represents a missing value with `NA`.
+
+```{r}
+fish_mass <- c(1.2, 1.5, NA, 1.8)
+fish_mass
+```
+
+A calculation involving an unknown value is usually unknown.
+
+```{r}
+mean(fish_mass)
+```
+
+Many summary functions include an `na.rm` argument. Set it to `TRUE` to remove missing values during the calculation.
+
+```{r}
+mean(fish_mass, na.rm = TRUE)
+```
+
+Check which values are missing:
+
+```{r}
+is.na(fish_mass)
+```
+
+Count the missing values:
+
+```{r}
+sum(is.na(fish_mass))
+```
+
+### Your turn 4
+
+Use the vector below.
+
+```{r}
+survey_catch <- c(12, 8, NA, 15, 21, NA, 10)
+```
+
+Calculate:
+
+1.  The mean while ignoring missing values.
+2.  The total while ignoring missing values.
+3.  The number of missing values.
+4.  The number of observed values.
+
+```{r}
+# Write your code here
+mean(survey_catch, na.rm = TRUE)
+sum(survey_catch, na.rm = TRUE)
+sum(is.na(survey_catch))
+length(survey_catch) - sum(is.na(survey_catch))
+```
+
+## Character and logical vectors
+
+Vectors can store text.
+
+```{r}
+species <- c("cod", "haddock", "hake", "flounder")
+species
+```
+
+Text must be enclosed in quotation marks.
+
+Vectors can also store logical values.
+
+```{r}
+is_large <- c(FALSE, TRUE, FALSE, TRUE)
+is_large
+```
+
+A single vector should generally contain one basic type. Mixing types may cause R to convert values to a common type.
+
+```{r}
+mixed_values <- c(1, 2, "three")
+mixed_values
+```
+
+## Data frames
+
+A data frame stores observations in rows and variables in columns.
+
+Create a small fisheries data frame:
+
+```{r}
+fish_data <- data.frame(
+  species = c("cod", "cod", "haddock", "haddock", "hake"),
+  length_cm = c(42, 38, 31, 35, 29),
+  region = c("north", "south", "north", "south", "south")
+)
+
+fish_data
+```
+
+Inspect its structure.
+
+```{r}
+str(fish_data)
+```
+
+View the first rows.
+
+```{r}
+head(fish_data)
+```
+
+Get a summary of each column.
+
+```{r}
+summary(fish_data)
+```
+
+Use `$` to extract one column.
+
+```{r}
+fish_data$length_cm
+```
+
+Calculate the mean fish length.
+
+```{r}
+mean(fish_data$length_cm)
+```
+
+Use a logical condition to select rows.
+
+```{r}
+fish_data[fish_data$length_cm > 35, ]
+```
+
+The comma matters:
+
+``` text
+data_frame[rows, columns]
+```
+
+Leaving the column position blank means “keep all columns.”
+
+### Your turn 5
+
+Using `fish_data`:
+
+1.  Find the maximum fish length.
+2.  Count the number of fish from the south region.
+3.  Display only fish that are at least 35 cm long.
+4.  Display only cod observations.
+
+```{r}
+# Write your code here
+max(fish_data$length_cm)
+sum(fish_data$region == "south")
+fish_data[fish_data$length_cm >= 35, ]
+fish_data[fish_data$species == "cod", ]
+```
+
+
+### Combining conditions when selecting rows 
+
+So far, we have selected rows using one condition at a time. We can also
+combine multiple logical conditions.
+
+First, create a slightly more complicated data frame containing a missing
+fish length and a logical column indicating whether each fish was caught.
+
+```{r}
+survey_data <- data.frame(
+  species = c(
+    "cod",
+    "cod",
+    "haddock",
+    "hake",
+    "haddock",
+    "hake",
+    "cod"),
+  length_cm = c(42, 38, NA, 31, 35, 29, 44),
+  region = c(
+    "north",
+    "south",
+    "north",
+    "south",
+    "south",
+    "north",
+    "north"),
+  caught = c(
+    TRUE,
+    TRUE,
+    FALSE,
+    TRUE,
+    TRUE,
+    FALSE,
+    TRUE))
+
+survey_data
+```
+
+### Select rows using a character condition
+
+The following condition produces one `TRUE` or `FALSE` value for each row.
+
+```{r}
+cod_rows <- survey_data$species == "cod"
+
+cod_rows
+```
+
+We can use that logical vector to select rows from the data frame.
+
+```{r}
+cod_observations <- survey_data[
+  cod_rows,
+]
+
+cod_observations
+```
+
+Recall that data-frame subsetting follows this structure:
+
+```text
+data_frame[rows, columns]
+```
+
+The comma is important. Leaving the space after the comma blank means that
+R should retain all columns.
+
+### Select rows using an existing logical column
+
+The `caught` column already contains `TRUE` and `FALSE` values.
+
+```{r}
+survey_data$caught
+```
+
+Therefore, we can use it directly to select rows. R retains rows where
+`caught` is `TRUE`.
+
+```{r}
+caught_observations <- survey_data[
+  survey_data$caught,
+]
+
+caught_observations
+```
+
+This is equivalent to writing:
+
+```{r}
+caught_observations <- survey_data[
+  survey_data$caught == TRUE,
+]
+
+caught_observations
+```
+
+The shorter version is usually preferred because `survey_data$caught` is
+already a logical vector.
+
+### Select rows using a calculated value
+
+First, calculate the mean of the observed fish lengths.
+
+```{r}
+mean_observed_length <- mean(
+  survey_data$length_cm,
+  na.rm = TRUE
+)
+
+mean_observed_length
+```
+
+Next, identify fish with lengths greater than the mean.
+
+```{r}
+survey_data$length_cm > mean_observed_length
+```
+
+Notice that the fish with a missing length produces `NA` rather than
+`TRUE` or `FALSE`. We can use `!is.na()` to identify rows with observed
+lengths.
+
+```{r}
+!is.na(survey_data$length_cm)
+```
+
+The `!` symbol means “not.” Therefore:
+
+```r
+!is.na(survey_data$length_cm)
+```
+
+is `TRUE` when the length is not missing.
+
+Use `&` to require both conditions to be true:
+
+```{r}
+above_mean_rows <-
+  !is.na(survey_data$length_cm) &
+  survey_data$length_cm > mean_observed_length
+
+above_mean_rows
+```
+
+Now use the logical vector to select the appropriate rows.
+
+```{r}
+above_mean_observations <- survey_data[
+  above_mean_rows,
+]
+
+above_mean_observations
+```
+
+### Calculate a summary for selected observations
+
+We can first select the lengths of fish that were caught:
+
+```{r}
+caught_lengths <- survey_data$length_cm[
+  survey_data$caught
+]
+
+caught_lengths
+```
+
+Then calculate their mean:
+
+```{r}
+mean(
+  caught_lengths,
+  na.rm = TRUE
+)
+```
+
+### Your turn 6
+
+Using `survey_data`:
+
+1. Create a data frame containing only observations from the north region.
+2. Create a data frame containing only observations with nonmissing lengths.
+3. Create a data frame containing only cod that were caught.
+4. Calculate the mean length of cod, ignoring missing values.
+
+```{r}
+# Write your code here
+```
+
+## Reading errors
+
+Errors are a normal part of programming. Read the message carefully and inspect the code immediately above it.
+
+### Object not found
+
+```{r}
+#| error: true
+
+fish_weight <- 3.2
+fish_Weight
+```
+
+R is case-sensitive: `fish_weight` and `fish_Weight` are different names.
+
+### Function not found
+
+```{r}
+#| error: true
+
+squareroot(16)
+```
+
+The correct function is `sqrt()`.
+
+### Incomplete expression
+
+A missing quotation mark, comma, or parenthesis may cause R to wait for more input. In the Console, a `+` prompt usually means the expression is incomplete. Press `Esc` to cancel it, then correct the code.
+
+### Debugging checklist
+
+When code does not work, check:
+
+1.  Is every object and function spelled correctly?
+2.  Does capitalization match?
+3.  Are quotation marks and parentheses paired?
+4.  Are commas in the correct places?
+5.  Did you run the code that creates the object?
+6.  Does the error identify a particular line or object?
+
+## Getting help
+
+Open the help page for a function with `?`.
+
+```{r}
+?mean
+```
+
+You can also use `help()`.
+
+```{r}
+help(mean)
+```
+
+Inspect the arguments of a function.
+
+```{r}
+args(mean)
+```
+
+Try tab completion in RStudio:
+
+1.  Type the first few letters of an object or function.
+2.  Press `Tab`.
+3.  Select from the available completions.
+
+
+## Final challenge
+
+Create a data frame named `survey_data` with the following columns:
+
+| station | species | length_cm | caught |
+|---------|---------|----------:|--------|
+| A       | cod     |        41 | TRUE   |
+| B       | haddock |        33 | TRUE   |
+| C       | cod     |        38 | FALSE  |
+| D       | hake    |        27 | TRUE   |
+| E       | haddock |        36 | TRUE   |
+
+Then use R to answer these questions:
+
+1.  What is the mean length?
+2.  How many fish were caught?
+3.  Which observations are cod?
+4.  Which observations are longer than the mean length?
+5.  What is the mean length of the fish that were caught?
+
+```{r}
+# Create survey_data and complete the analysis here
+```
+
+
+
+## Save and render your work
+
+Before leaving:
+
+1.  Save the `.qmd` file.
+2.  Click **Render**.
+3.  Confirm that the HTML document is created without errors.
+4.  Review the rendered document.
+5.  Commit your changes with a meaningful message.
+6.  Push the commit to GitHub.
+
+Example commit message:
+
+``` text
+Complete introductory R tutorial
+```
+
+## Key ideas
+
+- R code must be precise: spelling, capitalization, and punctuation matter.
+- Use `<-` to assign a value to an object.
+- Use descriptive `snake_case` object names.
+- Vectors store multiple values and support vectorized operations.
+- Functions perform actions and arguments control how they behave.
+- Missing values are represented by `NA`.
+- Data frames organize observations in rows and variables in columns.
+- Errors are information that can help you locate and fix a problem.
+- Save code in a script or Quarto document so your work is reproducible.
+
+## Sources and further reading
+
+This tutorial was developed using ideas and examples adapted into an original course format from:
+
+- Wickham, H., Çetinkaya-Rundel, M., and Grolemund, G. *R for Data Science, 2nd edition*: [Workflow basics](https://r4ds.hadley.nz/workflow-basics.html)
+- Zuur, A. and Ieno, E. *An Introduction to R*: [Getting started](https://intro2r.com/getting-started.html)
+- Posit: [Quarto documentation](https://quarto.org/docs/guide/)
+- R Core Team: [An Introduction to R](https://cran.r-project.org/doc/manuals/r-release/R-intro.html)
