@@ -722,6 +722,13 @@ Using `survey_data`:
 
 ```{r}
 # Write your code here
+north_only <- survey_data[survey_data$region=="north", ]
+north_only
+with_length <- survey_data[!is.na(survey_data$length_cm), ]
+with_length
+only_cod <- survey_data[survey_data$species=="cod", ]
+only_cod
+mean(only_cod$length_cm,na.rm = T)
 ```
 
 ## Reading errors
@@ -813,6 +820,13 @@ Then use R to answer these questions:
 
 ```{r}
 # Create survey_data and complete the analysis here
+survey_data <- data.frame(station = c("A", "B", "C", "D", "E"), species = c("cod", "haddock", "cod", "hake", "haddock"), length_cm = c(41, 33, 38, 27, 36), caught = c(T, T, F, T, T))
+
+mean(survey_data$length_cm)
+sum(survey_data$caught)
+survey_data$species == "cod"
+sum(survey_data$length_cm>35)
+mean(survey_data$length_cm[survey_data$caught])
 ```
 
 
