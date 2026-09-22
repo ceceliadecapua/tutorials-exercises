@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Importing and Tidying Data with the Tidyverse</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="tutorial-03-template_files/libs/clipboard/clipboard.min.js"></script>
+<script src="tutorial-03-template_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="tutorial-03-template_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="tutorial-03-template_files/libs/quarto-html/popper.min.js"></script>
+<script src="tutorial-03-template_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="tutorial-03-template_files/libs/quarto-html/anchor.min.js"></script>
+<link href="tutorial-03-template_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="tutorial-03-template_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="tutorial-03-template_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="tutorial-03-template_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="tutorial-03-template_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#learning-goals" id="toc-learning-goals" class="nav-link active" data-scroll-target="#learning-goals">Learning goals</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#sec-import" id="toc-sec-import" class="nav-link" data-scroll-target="#sec-import">Part 1: Import and inspect data</a></li>
+  <li><a href="#sec-biomass" id="toc-sec-biomass" class="nav-link" data-scroll-target="#sec-biomass">Part 2: Tidy the biomass data</a></li>
+  <li><a href="#sec-lotr" id="toc-sec-lotr" class="nav-link" data-scroll-target="#sec-lotr">Part 3: Observations stored in multiple tables</a></li>
+  <li><a href="#sec-tb" id="toc-sec-tb" class="nav-link" data-scroll-target="#sec-tb">Part 4: Multiple variables encoded in column names</a></li>
+  <li><a href="#sec-tb" id="toc-sec-tb" class="nav-link" data-scroll-target="#sec-tb">Part 5: Exporting data frames</a></li>
+  <li><a href="#sec-recap" id="toc-sec-recap" class="nav-link" data-scroll-target="#sec-recap">Recap</a></li>
+  <li><a href="#optional-extension-widening-data" id="toc-optional-extension-widening-data" class="nav-link" data-scroll-target="#optional-extension-widening-data">Optional extension: Widening data</a></li>
+  <li><a href="#optional-extension-add-readable-age-labels" id="toc-optional-extension-add-readable-age-labels" class="nav-link" data-scroll-target="#optional-extension-add-readable-age-labels">Optional extension: Add readable age labels</a></li>
+  <li><a href="#resources-and-attribution" id="toc-resources-and-attribution" class="nav-link" data-scroll-target="#resources-and-attribution">Resources and attribution</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Importing and Tidying Data with the Tidyverse</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-goals" class="level2">
+<h2 class="anchored" data-anchor-id="learning-goals">Learning goals</h2>
+<p>By the end of this tutorial, you should be able to:</p>
+<ol type="1">
+<li>import a CSV file with <code>readr::read_csv()</code>;</li>
+<li>inspect an imported dataset with <code>glimpse()</code>;</li>
+<li>identify the observational unit of a dataset;</li>
+<li>explain the three rules of tidy data;</li>
+<li>use <code>pivot_longer()</code> to reshape data; and</li>
+<li>recognize when column names encode multiple variables.</li>
+</ol>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>The tutorial files are organized in a folder like this:</p>
+<pre class="text"><code>tutorial-03/
+├── tutorial-03.qmd
+└── data/
+    ├── stock-biomass-wide.csv
+    ├── The_Fellowship_Of_The_Ring.csv
+    ├── The_Two_Towers.csv
+    ├── The_Return_Of_The_King.csv
+    └── tb.csv</code></pre>
+<p>Run this once if the tidyverse is not installed:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">"tidyverse"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Load the tidyverse and the here packages at the beginning of the session.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Today’s workflow
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Import → Inspect → Identify observations → Tidy → Check</strong></p>
+</div>
+</div>
+</section>
+<section id="sec-import" class="level2">
+<h2 class="anchored" data-anchor-id="sec-import">Part 1: Import and inspect data</h2>
+<p>A CSV is a plain-text file in which columns are separated by commas. We use <code>read_csv()</code> to import the <code>stock-biomass-wide</code> dataframe and assign the result to an object.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>? <span class="fu">read_csv</span>()</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>? <span class="fu">names</span>()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>biomass_wide <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">here</span>(</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"week-03"</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"tutorials"</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">"tutorial-03"</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">"data"</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">"stock-biomass-wide.csv"</span>),</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">na =</span> <span class="fu">c</span>(<span class="st">""</span>, <span class="st">"NA"</span>, <span class="st">"."</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>biomass_wide</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 6
+  region       stock            `2021`  `2022`  `2023`  `2024`
+  &lt;chr&gt;        &lt;chr&gt;             &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+1 Northeast    Atlantic cod      12400   11950   11020   10300
+2 Northeast    Haddock           18750   19400   20120   19880
+3 Mid-Atlantic Black sea bass     8200    8750    9100      NA
+4 Mid-Atlantic Bluefish          14600   13200   12150   11750
+5 Alaska       Pacific cod      960000  905000  880000  842000
+6 Alaska       Walleye pollock 1510000 1485000 1540000 1585000</code></pre>
+</div>
+</div>
+<p>The first argument to <code>read_csv()</code> gives the <strong>path</strong> to the file. With the <code>{here}</code> package, we list all folders after the root folder (here, <code>course-hub/</code>).</p>
+<p>The second argument is the <code>na</code> argument, which identifies entries that should be treated as missing values. In this file, a period (<code>.</code>) means that no value was reported. Usually, a cell is left blank if no value is reported.</p>
+<section id="inspect-the-imported-data" class="level3">
+<h3 class="anchored" data-anchor-id="inspect-the-imported-data">Inspect the imported data</h3>
+<p>Never assume that a file imported exactly as intended. Inspect it before continuing.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(biomass_wide)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 6
+Columns: 6
+$ region &lt;chr&gt; "Northeast", "Northeast", "Mid-Atlantic", "Mid-Atlantic", "Alas…
+$ stock  &lt;chr&gt; "Atlantic cod", "Haddock", "Black sea bass", "Bluefish", "Pacif…
+$ `2021` &lt;dbl&gt; 12400, 18750, 8200, 14600, 960000, 1510000
+$ `2022` &lt;dbl&gt; 11950, 19400, 8750, 13200, 905000, 1485000
+$ `2023` &lt;dbl&gt; 11020, 20120, 9100, 12150, 880000, 1540000
+$ `2024` &lt;dbl&gt; 10300, 19880, NA, 11750, 842000, 1585000</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(biomass_wide)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "region" "stock"  "2021"   "2022"   "2023"   "2024"  </code></pre>
+</div>
+</div>
+<p><code>glimpse()</code> is from the <code>{dplyr}</code> package and this function lets you see the structure of your dataframe, showing you the number of rows and columns, variable names, variable types, and example values. <code>names()</code> is a base-R function that prints the names of all columns.</p>
+<p>Reminder of data/variable types:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Abbreviation</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>&lt;chr&gt;</code></td>
+<td>character text</td>
+</tr>
+<tr class="even">
+<td><code>&lt;dbl&gt;</code></td>
+<td>numeric value</td>
+</tr>
+<tr class="odd">
+<td><code>&lt;int&gt;</code></td>
+<td>integer</td>
+</tr>
+<tr class="even">
+<td><code>&lt;lgl&gt;</code></td>
+<td>logical: <code>TRUE</code> or <code>FALSE</code></td>
+</tr>
+<tr class="odd">
+<td><code>&lt;date&gt;</code></td>
+<td>calendar date</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Pause and discuss
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>What does one row currently represent?</li>
+<li>Are <code>2021</code>, <code>2022</code>, <code>2023</code>, and <code>2024</code> variables or values?</li>
+<li>What measured variable is spread across those columns?</li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-biomass" class="level2">
+<h2 class="anchored" data-anchor-id="sec-biomass">Part 2: Tidy the biomass data</h2>
+<p>A dataset is tidy when:</p>
+<ol type="1">
+<li>each variable is a column;</li>
+<li>each observation is a row; and</li>
+<li>each value is a cell.</li>
+</ol>
+<p>In <code>biomass_wide</code>, years are stored as column names. Biomass is spread across several columns even though it is one measured variable.</p>
+<p>The observational unit we want is:</p>
+<blockquote class="blockquote">
+<p>One stock observed in one year.</p>
+</blockquote>
+<p>A tidy version should contain the variables:</p>
+<ul>
+<li><code>region</code></li>
+<li><code>stock</code></li>
+<li><code>year</code></li>
+<li><code>biomass_t</code></li>
+</ul>
+<section id="lengthen-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="lengthen-the-data">Lengthen the data</h3>
+<p>Use <code>pivot_longer()</code> when information that belongs in rows is spread across columns.</p>
+<p>First, look at the documentation for <code>pivot_longer()</code>. You see the description, usage, and examples. What are some of the listed arguments?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>? <span class="fu">pivot_longer</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now let’s use <code>pivot_longer()</code> to <strong>reshape</strong> the <code>biomass_wide</code> dataframe. We will want to provide which columns we want to pivot into longer format (<code>cols =</code>) the name of the new column that will contain the original column names (<code>names_to = "year"</code>), and the name of the new column that will contain their values (<code>values_to = "biomass_t"</code>).</p>
+<p>We will also start using the pipe <code>|&gt;</code> operator, which takes the result on its left and passes it into the function on its right. We will learn more about the pipes next week in the data wrangling tutorial. Pipes have made coding simpler and easier to read. In the below example, we take the <code>biomass_wide</code> dataframe, pipe (or pass) it into the function <code>pivot_longer()</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>biomass_long <span class="ot">&lt;-</span> biomass_wide <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"20"</span>),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"year"</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"biomass_t"</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>biomass_long</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 24 × 4
+   region       stock          year  biomass_t
+   &lt;chr&gt;        &lt;chr&gt;          &lt;chr&gt;     &lt;dbl&gt;
+ 1 Northeast    Atlantic cod   2021      12400
+ 2 Northeast    Atlantic cod   2022      11950
+ 3 Northeast    Atlantic cod   2023      11020
+ 4 Northeast    Atlantic cod   2024      10300
+ 5 Northeast    Haddock        2021      18750
+ 6 Northeast    Haddock        2022      19400
+ 7 Northeast    Haddock        2023      20120
+ 8 Northeast    Haddock        2024      19880
+ 9 Mid-Atlantic Black sea bass 2021       8200
+10 Mid-Atlantic Black sea bass 2022       8750
+# ℹ 14 more rows</code></pre>
+</div>
+</div>
+<p>Read the arguments as a sentence:</p>
+<blockquote class="blockquote">
+<p>Take the columns whose names start with <code>20</code>, put their names into a new variable called <code>year</code>, and put their cell values into a new variable called <code>biomass_t</code>.</p>
+</blockquote>
+<p>Compare the original and reshaped datasets.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>biomass_wide</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 6
+  region       stock            `2021`  `2022`  `2023`  `2024`
+  &lt;chr&gt;        &lt;chr&gt;             &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+1 Northeast    Atlantic cod      12400   11950   11020   10300
+2 Northeast    Haddock           18750   19400   20120   19880
+3 Mid-Atlantic Black sea bass     8200    8750    9100      NA
+4 Mid-Atlantic Bluefish          14600   13200   12150   11750
+5 Alaska       Pacific cod      960000  905000  880000  842000
+6 Alaska       Walleye pollock 1510000 1485000 1540000 1585000</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>biomass_long</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 24 × 4
+   region       stock          year  biomass_t
+   &lt;chr&gt;        &lt;chr&gt;          &lt;chr&gt;     &lt;dbl&gt;
+ 1 Northeast    Atlantic cod   2021      12400
+ 2 Northeast    Atlantic cod   2022      11950
+ 3 Northeast    Atlantic cod   2023      11020
+ 4 Northeast    Atlantic cod   2024      10300
+ 5 Northeast    Haddock        2021      18750
+ 6 Northeast    Haddock        2022      19400
+ 7 Northeast    Haddock        2023      20120
+ 8 Northeast    Haddock        2024      19880
+ 9 Mid-Atlantic Black sea bass 2021       8200
+10 Mid-Atlantic Black sea bass 2022       8750
+# ℹ 14 more rows</code></pre>
+</div>
+</div>
+<p>What do you notice?</p>
+</section>
+<section id="check-the-result" class="level3">
+<h3 class="anchored" data-anchor-id="check-the-result">Check the result</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(biomass_long)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 24
+Columns: 4
+$ region    &lt;chr&gt; "Northeast", "Northeast", "Northeast", "Northeast", "Northea…
+$ stock     &lt;chr&gt; "Atlantic cod", "Atlantic cod", "Atlantic cod", "Atlantic co…
+$ year      &lt;chr&gt; "2021", "2022", "2023", "2024", "2021", "2022", "2023", "202…
+$ biomass_t &lt;dbl&gt; 12400, 11950, 11020, 10300, 18750, 19400, 20120, 19880, 8200…</code></pre>
+</div>
+</div>
+<p>What needs fixing? hint: look at the <code>year</code> variable type.</p>
+<details>
+<summary>
+Click to show the answer and how to fix it
+</summary>
+<p><code>year</code> is character text because it came from column names. Convert it to an integer.</p>
+<p><code>parse_integer()</code> converts character values to whole-number integers and reports values that cannot be parsed correctly. You can also use <code>as.numeric()</code>, which would convert them to numeric double values.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>biomass_long <span class="ot">&lt;-</span> biomass_long <span class="sc">|&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">parse_integer</span>(year))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(biomass_long)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 24
+Columns: 4
+$ region    &lt;chr&gt; "Northeast", "Northeast", "Northeast", "Northeast", "Northea…
+$ stock     &lt;chr&gt; "Atlantic cod", "Atlantic cod", "Atlantic cod", "Atlantic co…
+$ year      &lt;int&gt; 2021, 2022, 2023, 2024, 2021, 2022, 2023, 2024, 2021, 2022, …
+$ biomass_t &lt;dbl&gt; 12400, 11950, 11020, 10300, 18750, 19400, 20120, 19880, 8200…</code></pre>
+</div>
+</div>
+Now one row represents one stock observed in one year.
+</details>
+</section>
+<section id="your-turn" class="level3">
+<h3 class="anchored" data-anchor-id="your-turn">Your turn</h3>
+<p>Complete the code so the year columns become a variable named <code>survey_year</code> and their values become a variable named <code>biomass</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>biomass_wide <span class="sc">|&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> ____________________,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> ____________________,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> ____________________</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>biomass_wide <span class="sc">|&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"20"</span>),</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"survey_year"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"biomass"</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 24 × 4
+   region       stock          survey_year biomass
+   &lt;chr&gt;        &lt;chr&gt;          &lt;chr&gt;         &lt;dbl&gt;
+ 1 Northeast    Atlantic cod   2021          12400
+ 2 Northeast    Atlantic cod   2022          11950
+ 3 Northeast    Atlantic cod   2023          11020
+ 4 Northeast    Atlantic cod   2024          10300
+ 5 Northeast    Haddock        2021          18750
+ 6 Northeast    Haddock        2022          19400
+ 7 Northeast    Haddock        2023          20120
+ 8 Northeast    Haddock        2024          19880
+ 9 Mid-Atlantic Black sea bass 2021           8200
+10 Mid-Atlantic Black sea bass 2022           8750
+# ℹ 14 more rows</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-lotr" class="level2">
+<h2 class="anchored" data-anchor-id="sec-lotr">Part 3: Observations stored in multiple tables</h2>
+<p>The Lord of the Rings data record the number of words spoken by characters of different races and genders in each film. The observations are split among three files—one file per film.</p>
+<p>What is the file path one would need to use to import these files if they are in the data subfolder of the tutorials subfolder of week-03?</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>    file_path <span class="ot">&lt;-</span> <span class="fu">here</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>        _______,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>        _______,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        _______,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        _______,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"The_Fellowship_Of_The_Ring.csv"</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>    data_file_path <span class="ot">&lt;-</span> <span class="fu">here</span>(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>        <span class="st">"week-03"</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"tutorials"</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"tutorial-03"</span>,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"data"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</div>
+<p>Make sure you run the above code because you will use the <code>data_file_path</code> object below with the <code>file.path</code> function.</p>
+<p>The <code>file.path</code> function constructs a path to a file.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>? <span class="fu">file.path</span>()</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>LOTR_file_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(data_file_path, <span class="st">"The_Fellowship_Of_The_Ring.csv"</span>)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>LOTR_file_path</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "/Users/jenniferbigman/Library/CloudStorage/Dropbox/UD/teaching/Skill Building in R/Fall 2026/course-hub/week-03/tutorials/tutorial-03/data/The_Fellowship_Of_The_Ring.csv"</code></pre>
+</div>
+</div>
+<p>Now that you know about creating file paths, let’s read in out datasets. Because we have more than one dataset file, we won’t use the above code (<code>LOTR_file_path</code>). We will use <code>file.path</code> and <code>data_file_path</code> in the <code>read_csv</code> function. <code>read_csv</code> normally prints out a lot of information inferred from the file. You can use the <code>show_col_types = FALSE</code> argument to prevent this.</p>
+<section id="import-the-three-files" class="level3">
+<h3 class="anchored" data-anchor-id="import-the-three-files">Import the three files</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>fellowship <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">file.path</span>(data_file_path,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"The_Fellowship_Of_The_Ring.csv"</span>),</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>two_towers <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">file.path</span>(data_file_path,</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"The_Two_Towers.csv"</span>),</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>return_king <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">file.path</span>(data_file_path,</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">"The_Return_Of_The_King.csv"</span>),</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Inspect one of the datasets:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(fellowship)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 3
+Columns: 4
+$ Film   &lt;chr&gt; "The Fellowship Of The Ring", "The Fellowship Of The Ring", "Th…
+$ Race   &lt;chr&gt; "Elf", "Hobbit", "Man"
+$ Female &lt;dbl&gt; 1229, 14, 0
+$ Male   &lt;dbl&gt; 971, 3644, 1995</code></pre>
+</div>
+</div>
+<p>See if the datasets contain the same information:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(fellowship)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Film"   "Race"   "Female" "Male"  </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(two_towers)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Film"   "Race"   "Female" "Male"  </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(return_king)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Film"   "Race"   "Female" "Male"  </code></pre>
+</div>
+</div>
+<p>Each file contains the same variables but different observations. Stack them with <code>bind_rows()</code>. <code>bind_rows()</code> is a <code>tidyverse</code> (actually <code>{dplyr}</code>) function that binds any number of data frames together by row (i.e., stack them). The output will contain all columns that appear in any of the inputs. (There is also a function <code>bind_cols</code>).</p>
+<p>Here, we combine the three dataframes together and then pipe the output into another function, <code>rename_with</code> to convert all column names to lowercase (using <code>str_to_lower</code>).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>lotr_wide <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    fellowship,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    two_towers,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    return_king) <span class="sc">|&gt;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>(str_to_lower)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>lotr_wide</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 9 × 4
+  film                       race   female  male
+  &lt;chr&gt;                      &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt;
+1 The Fellowship Of The Ring Elf      1229   971
+2 The Fellowship Of The Ring Hobbit     14  3644
+3 The Fellowship Of The Ring Man         0  1995
+4 The Two Towers             Elf       331   513
+5 The Two Towers             Hobbit      0  2463
+6 The Two Towers             Man       401  3589
+7 The Return Of The King     Elf       183   510
+8 The Return Of The King     Hobbit      2  2673
+9 The Return Of The King     Man       268  2459</code></pre>
+</div>
+</div>
+<p><code>bind_rows()</code> is appropriate because the tables have the same columns and each contains additional rows of the same kind of observation.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span><code>bind_rows()</code> is not a join
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Use <code>bind_rows()</code> to stack similar observations vertically. Use a join (e.g., <code>left_join()</code> [which we will learn about later]) when separate tables contain different variables that must be matched using an identifier.</p>
+</div>
+</div>
+</section>
+<section id="tidy-the-gender-columns" class="level3">
+<h3 class="anchored" data-anchor-id="tidy-the-gender-columns">Tidy the gender columns</h3>
+<p>The columns <code>female</code> and <code>male</code> do not represent two different measured variables. They contain values of the variable <code>gender</code>. Their cells contain values of the variable <code>words</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>lotr_tidy <span class="ot">&lt;-</span> lotr_wide <span class="sc">|&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">c</span>(female, male),</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"gender"</span>,</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"words"</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>lotr_tidy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 18 × 4
+   film                       race   gender words
+   &lt;chr&gt;                      &lt;chr&gt;  &lt;chr&gt;  &lt;dbl&gt;
+ 1 The Fellowship Of The Ring Elf    female  1229
+ 2 The Fellowship Of The Ring Elf    male     971
+ 3 The Fellowship Of The Ring Hobbit female    14
+ 4 The Fellowship Of The Ring Hobbit male    3644
+ 5 The Fellowship Of The Ring Man    female     0
+ 6 The Fellowship Of The Ring Man    male    1995
+ 7 The Two Towers             Elf    female   331
+ 8 The Two Towers             Elf    male     513
+ 9 The Two Towers             Hobbit female     0
+10 The Two Towers             Hobbit male    2463
+11 The Two Towers             Man    female   401
+12 The Two Towers             Man    male    3589
+13 The Return Of The King     Elf    female   183
+14 The Return Of The King     Elf    male     510
+15 The Return Of The King     Hobbit female     2
+16 The Return Of The King     Hobbit male    2673
+17 The Return Of The King     Man    female   268
+18 The Return Of The King     Man    male    2459</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Pause and discuss
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>What does one row represent before the pivot? What does one row represent afterward?</p>
+</div>
+</div>
+<details>
+<summary>
+Click to show the answer
+</summary>
+<p>Before the pivot: One row represents a unique combination of film and race, with the word counts for female and male characters stored in separate columns.</p>
+<p>After the pivot: One row represents a unique combination of film, race, and gender, with the corresponding word count stored in the <code>words</code> column.</p>
+</details>
+</section>
+<section id="use-the-tidy-data" class="level3">
+<h3 class="anchored" data-anchor-id="use-the-tidy-data">Use the tidy data</h3>
+<p>To illustrate how useful tidy data is for working with the <code>{tidyverse}</code> packages, we will produce a summary of the number of words spoken by males and females. <code>group_by</code> is a function that groups a dataframe by the specified variable(s) so operations can be performed on a per-group basis. <code>summarize</code> (or <code>summarise</code> as the package developer is British) creates a new data frame that returns one row for each combination of grouping variables. If no grouping variables, the output will have a single row summarizing all observations in the input. Below, we use <code>group_by</code> and <code>summarize</code> to create a new column <code>total_words</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>lotr_tidy <span class="sc">|&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(gender) <span class="sc">|&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_words =</span> <span class="fu">sum</span>(words),</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  gender total_words
+  &lt;chr&gt;        &lt;dbl&gt;
+1 female        2428
+2 male         18817</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-tb" class="level2">
+<h2 class="anchored" data-anchor-id="sec-tb">Part 4: Multiple variables encoded in column names</h2>
+<p>The tuberculosis dataset records confirmed cases by country, year, sex, and age group.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>tb <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">file.path</span>(</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>        data_file_path,</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tb.csv"</span>),</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>tb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5,769 × 22
+   iso2   year   m04  m514  m014 m1524 m2534 m3544 m4554 m5564   m65    mu   f04
+   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+ 1 AD     1989    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+ 2 AD     1990    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+ 3 AD     1991    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+ 4 AD     1992    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+ 5 AD     1993    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+ 6 AD     1994    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA    NA
+ 7 AD     1996    NA    NA     0     0     0     4     1     0     0    NA    NA
+ 8 AD     1997    NA    NA     0     0     1     2     2     1     6    NA    NA
+ 9 AD     1998    NA    NA     0     0     0     1     0     0     0    NA    NA
+10 AD     1999    NA    NA     0     0     0     1     1     0     0    NA    NA
+# ℹ 5,759 more rows
+# ℹ 9 more variables: f514 &lt;dbl&gt;, f014 &lt;dbl&gt;, f1524 &lt;dbl&gt;, f2534 &lt;dbl&gt;,
+#   f3544 &lt;dbl&gt;, f4554 &lt;dbl&gt;, f5564 &lt;dbl&gt;, f65 &lt;dbl&gt;, fu &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>Inspect the column names.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "iso2"  "year"  "m04"   "m514"  "m014"  "m1524" "m2534" "m3544" "m4554"
+[10] "m5564" "m65"   "mu"    "f04"   "f514"  "f014"  "f1524" "f2534" "f3544"
+[19] "f4554" "f5564" "f65"   "fu"   </code></pre>
+</div>
+</div>
+<p>A name such as <code>m1524</code> contains two values:</p>
+<pre class="text"><code>m1524
+|  |
+|  └─ age group: 15–24
+└──── gender: male</code></pre>
+<p>The column name is therefore a combination of two underlying variables: <code>gender</code> and <code>age</code>.</p>
+<section id="step-1-pivot-the-case-columns-longer" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-pivot-the-case-columns-longer">Step 1: Pivot the case columns longer</h3>
+<p>Use similar code as before to reshape the data frame. <code>values_drop_na = TRUE</code> removes rows created by <code>pivot_longer()</code> when the value places in the cases column is <code>NA</code>. Without it, the long data would include combinations of country, year, and demographic group with missing case counts.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>tb_long <span class="ot">&lt;-</span> tb <span class="sc">|&gt;</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(iso2, year),</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"demographic"</span>,</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"cases"</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>tb_long</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 115,380 × 4
+   iso2   year demographic cases
+   &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;dbl&gt;
+ 1 AD     1989 m04            NA
+ 2 AD     1989 m514           NA
+ 3 AD     1989 m014           NA
+ 4 AD     1989 m1524          NA
+ 5 AD     1989 m2534          NA
+ 6 AD     1989 m3544          NA
+ 7 AD     1989 m4554          NA
+ 8 AD     1989 m5564          NA
+ 9 AD     1989 m65            NA
+10 AD     1989 mu             NA
+# ℹ 115,370 more rows</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>tb_long <span class="ot">&lt;-</span> tb <span class="sc">|&gt;</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(iso2, year),</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"demographic"</span>,</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"cases"</span>,</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_drop_na =</span> <span class="cn">TRUE</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>tb_long</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 35,750 × 4
+   iso2   year demographic cases
+   &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;       &lt;dbl&gt;
+ 1 AD     1996 m014            0
+ 2 AD     1996 m1524           0
+ 3 AD     1996 m2534           0
+ 4 AD     1996 m3544           4
+ 5 AD     1996 m4554           1
+ 6 AD     1996 m5564           0
+ 7 AD     1996 m65             0
+ 8 AD     1996 f014            0
+ 9 AD     1996 f1524           1
+10 AD     1996 f2534           1
+# ℹ 35,740 more rows</code></pre>
+</div>
+</div>
+<p>The new <code>demographic</code> column is still not tidy because each value combines gender and age.</p>
+</section>
+<section id="step-2-separate-the-encoded-variables" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-separate-the-encoded-variables">Step 2: Separate the encoded variables</h3>
+<p>The first character of <code>demographic</code> indicates <code>gender</code>, while the remaining characters contain the age code. We can separate these components using <code>separate_wider_regex()</code> from the <code>{tidyr}</code> package. This function splits a character column into multiple columns based on regular expression patterns. Regular expressions are patterns used to match specific arrangements of characters within text. Here, <code>"[mf]"</code> matches either <code>"m"</code> or <code>"f"</code>, and <code>".*"</code> matches all remaining characters. Related functions can instead split values at delimiters, such as commas, or at fixed character widths.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>tb_tidy <span class="ot">&lt;-</span> tb_long <span class="sc">|&gt;</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_wider_regex</span>(</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    demographic,</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">patterns =</span> <span class="fu">c</span>(</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">gender =</span> <span class="st">"[mf]"</span>,</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">age =</span> <span class="st">".*"</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>tb_tidy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 35,750 × 5
+   iso2   year gender age   cases
+   &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt; &lt;dbl&gt;
+ 1 AD     1996 m      014       0
+ 2 AD     1996 m      1524      0
+ 3 AD     1996 m      2534      0
+ 4 AD     1996 m      3544      4
+ 5 AD     1996 m      4554      1
+ 6 AD     1996 m      5564      0
+ 7 AD     1996 m      65        0
+ 8 AD     1996 f      014       0
+ 9 AD     1996 f      1524      1
+10 AD     1996 f      2534      1
+# ℹ 35,740 more rows</code></pre>
+</div>
+</div>
+<p>Now each underlying variable has its own column.</p>
+</section>
+<section id="replace-the-gender-codes" class="level3">
+<h3 class="anchored" data-anchor-id="replace-the-gender-codes">Replace the gender codes</h3>
+<p>Abbreviations are not always so clear. Avoid if you can. Let’s spell out what <code>m</code> and <code>f</code> mean.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>tb_tidy <span class="ot">&lt;-</span> tb_tidy <span class="sc">|&gt;</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">gender =</span> <span class="fu">recode</span>(</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>      gender,</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">m =</span> <span class="st">"male"</span>,</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">f =</span> <span class="st">"female"</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>tb_tidy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 35,750 × 5
+   iso2   year gender age   cases
+   &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt; &lt;dbl&gt;
+ 1 AD     1996 male   014       0
+ 2 AD     1996 male   1524      0
+ 3 AD     1996 male   2534      0
+ 4 AD     1996 male   3544      4
+ 5 AD     1996 male   4554      1
+ 6 AD     1996 male   5564      0
+ 7 AD     1996 male   65        0
+ 8 AD     1996 female 014       0
+ 9 AD     1996 female 1524      1
+10 AD     1996 female 2534      1
+# ℹ 35,740 more rows</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Observational unit
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>After tidying, one row represents the reported number of cases for one country, year, gender, and age group.</p>
+</div>
+</div>
+<p>The age codes can also be converted to readable labels, but we will leave that as an optional extension.</p>
+</section>
+</section>
+<section id="sec-tb" class="level2">
+<h2 class="anchored" data-anchor-id="sec-tb">Part 5: Exporting data frames</h2>
+<p>Use <code>write_csv()</code> from the <code>{readr}</code> package to save a data frame as a CSV file. The first argument is the data frame to save, and the second is the file path and filename. Unlike base R’s <code>write.csv()</code>, <code>write_csv()</code> does not add row names as an extra column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a path for the output file</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>output_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  data_file_path,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"lotr_tidy.csv"</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a><span class="co"># save the tidy data as a CSV file</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(</span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>  lotr_tidy,</span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>  output_file</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a><span class="co"># check that the file exists</span></span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a><span class="fu">file.exists</span>(output_file)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+</section>
+<section id="sec-recap" class="level2">
+<h2 class="anchored" data-anchor-id="sec-recap">Recap</h2>
+<section id="import-and-inspect" class="level3">
+<h3 class="anchored" data-anchor-id="import-and-inspect">Import and inspect</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">here</span>(<span class="st">"insert-file-path"</span>,</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>             <span class="st">"file.csv"</span>))</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="stack-tables-containing-the-same-variables" class="level3">
+<h3 class="anchored" data-anchor-id="stack-tables-containing-the-same-variables">Stack tables containing the same variables</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>combined <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(table1, table2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="move-column-names-into-rows" class="level3">
+<h3 class="anchored" data-anchor-id="move-column-names-into-rows">Move column names into rows</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>data_long <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> columns_to_pivot,</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"new_variable"</span>,</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"measured_value"</span></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="split-an-encoded-column-into-variables" class="level3">
+<h3 class="anchored" data-anchor-id="split-an-encoded-column-into-variables">Split an encoded column into variables</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>data_tidy <span class="ot">&lt;-</span> data_long <span class="sc">|&gt;</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_wider_regex</span>(</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    combined_variable,</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">patterns =</span> <span class="fu">c</span>(</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">variable_1 =</span> <span class="st">"pattern_1"</span>,</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">variable_2 =</span> <span class="st">"pattern_2"</span></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="which-function-would-you-use" class="level3">
+<h3 class="anchored" data-anchor-id="which-function-would-you-use">Which function would you use?</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Situation</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Read a CSV file</td>
+<td><code>read_csv()</code></td>
+</tr>
+<tr class="even">
+<td>Inspect column types</td>
+<td><code>glimpse()</code></td>
+</tr>
+<tr class="odd">
+<td>Stack the same kinds of observations</td>
+<td><code>bind_rows()</code></td>
+</tr>
+<tr class="even">
+<td>Move column names into rows</td>
+<td><code>pivot_longer()</code></td>
+</tr>
+<tr class="odd">
+<td>Split one encoded column into variables</td>
+<td><code>separate_wider_regex()</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="questions-to-ask-before-tidying" class="level3">
+<h3 class="anchored" data-anchor-id="questions-to-ask-before-tidying">Questions to ask before tidying</h3>
+<ol type="1">
+<li>What are the variables?</li>
+<li>What does one observation represent?</li>
+<li>Are variable values stored in column names?</li>
+<li>Does one column contain multiple variables?</li>
+<li>Are observations unnecessarily split across multiple tables?</li>
+</ol>
+</section>
+</section>
+<section id="optional-extension-widening-data" class="level2">
+<h2 class="anchored" data-anchor-id="optional-extension-widening-data">Optional extension: Widening data</h2>
+<p><code>pivot_wider()</code> performs the opposite transformation. It takes values from rows and uses them to create columns.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>words_by_gender <span class="ot">&lt;-</span> lotr_tidy <span class="sc">|&gt;</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(film, gender) <span class="sc">|&gt;</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_words =</span> <span class="fu">sum</span>(words),</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>words_by_gender <span class="sc">|&gt;</span></span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_from =</span> gender,</span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_from =</span> total_words</span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  film                       female  male
+  &lt;chr&gt;                       &lt;dbl&gt; &lt;dbl&gt;
+1 The Fellowship Of The Ring   1243  6610
+2 The Return Of The King        453  5642
+3 The Two Towers                732  6565</code></pre>
+</div>
+</div>
+<p>Wide data are not inherently bad. They can be convenient for presentation, data entry, or matrix operations. Long tidy data are generally easier to transform, summarize, and visualize with tidyverse tools.</p>
+</section>
+<section id="optional-extension-add-readable-age-labels" class="level2">
+<h2 class="anchored" data-anchor-id="optional-extension-add-readable-age-labels">Optional extension: Add readable age labels</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>tb_tidy <span class="sc">|&gt;</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">age =</span> <span class="fu">recode</span>(</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>      age,</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">04</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"0–4"</span>,</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">514</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"5–14"</span>,</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">014</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"0–14"</span>,</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">1524</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"15–24"</span>,</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">2534</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"25–34"</span>,</span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">3544</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"35–44"</span>,</span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">4554</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"45–54"</span>,</span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">5564</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"55–64"</span>,</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">65</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"65+"</span>,</span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">u =</span> <span class="st">"unknown"</span></span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 35,750 × 5
+   iso2   year gender age   cases
+   &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt; &lt;dbl&gt;
+ 1 AD     1996 male   0–14      0
+ 2 AD     1996 male   15–24     0
+ 3 AD     1996 male   25–34     0
+ 4 AD     1996 male   35–44     4
+ 5 AD     1996 male   45–54     1
+ 6 AD     1996 male   55–64     0
+ 7 AD     1996 male   65+       0
+ 8 AD     1996 female 0–14      0
+ 9 AD     1996 female 15–24     1
+10 AD     1996 female 25–34     1
+# ℹ 35,740 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="resources-and-attribution" class="level2">
+<h2 class="anchored" data-anchor-id="resources-and-attribution">Resources and attribution</h2>
+<p>This tutorial adapts concepts and examples from:</p>
+<ul>
+<li><a href="https://r4ds.hadley.nz/data-tidy.html">R for Data Science (2e): Data tidying</a></li>
+<li><a href="https://r4ds.hadley.nz/data-import.html">R for Data Science (2e): Data import</a></li>
+<li><a href="https://tidyr.tidyverse.org/articles/tidy-data.html">tidyr: Tidy data vignette</a></li>
+<li><a href="https://github.com/jennybc/lotr-tidy">Jenny Bryan’s Lord of the Rings tidy-data lesson</a></li>
+</ul>
+<p>The Lord of the Rings data files are redistributed from Jenny Bryan’s public teaching repository. The tuberculosis file is redistributed from the tidyr vignette repository.</p>
+<!-- -->
+
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Importing and Tidying Data with the Tidyverse"</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a><span class="co">    toc-depth: 2</span></span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: false</span></span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a><span class="an">editor:</span><span class="co"> source</span></span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a><span class="fu">## Learning goals</span></span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a>By the end of this tutorial, you should be able to:</span>
+<span id="cb66-18"><a href="#cb66-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-19"><a href="#cb66-19" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>import a CSV file with <span class="in">`readr::read_csv()`</span>;</span>
+<span id="cb66-20"><a href="#cb66-20" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>inspect an imported dataset with <span class="in">`glimpse()`</span>;</span>
+<span id="cb66-21"><a href="#cb66-21" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>identify the observational unit of a dataset;</span>
+<span id="cb66-22"><a href="#cb66-22" aria-hidden="true" tabindex="-1"></a><span class="ss">4.  </span>explain the three rules of tidy data;</span>
+<span id="cb66-23"><a href="#cb66-23" aria-hidden="true" tabindex="-1"></a><span class="ss">5.  </span>use <span class="in">`pivot_longer()`</span> to reshape data; and</span>
+<span id="cb66-24"><a href="#cb66-24" aria-hidden="true" tabindex="-1"></a><span class="ss">6.  </span>recognize when column names encode multiple variables.</span>
+<span id="cb66-25"><a href="#cb66-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-26"><a href="#cb66-26" aria-hidden="true" tabindex="-1"></a><span class="fu">## Setup</span></span>
+<span id="cb66-27"><a href="#cb66-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-28"><a href="#cb66-28" aria-hidden="true" tabindex="-1"></a>The tutorial files are organized in a folder like this:</span>
+<span id="cb66-29"><a href="#cb66-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-30"><a href="#cb66-30" aria-hidden="true" tabindex="-1"></a><span class="in">``` text</span></span>
+<span id="cb66-31"><a href="#cb66-31" aria-hidden="true" tabindex="-1"></a><span class="in">tutorial-03/</span></span>
+<span id="cb66-32"><a href="#cb66-32" aria-hidden="true" tabindex="-1"></a><span class="in">├── tutorial-03.qmd</span></span>
+<span id="cb66-33"><a href="#cb66-33" aria-hidden="true" tabindex="-1"></a><span class="in">└── data/</span></span>
+<span id="cb66-34"><a href="#cb66-34" aria-hidden="true" tabindex="-1"></a><span class="in">    ├── stock-biomass-wide.csv</span></span>
+<span id="cb66-35"><a href="#cb66-35" aria-hidden="true" tabindex="-1"></a><span class="in">    ├── The_Fellowship_Of_The_Ring.csv</span></span>
+<span id="cb66-36"><a href="#cb66-36" aria-hidden="true" tabindex="-1"></a><span class="in">    ├── The_Two_Towers.csv</span></span>
+<span id="cb66-37"><a href="#cb66-37" aria-hidden="true" tabindex="-1"></a><span class="in">    ├── The_Return_Of_The_King.csv</span></span>
+<span id="cb66-38"><a href="#cb66-38" aria-hidden="true" tabindex="-1"></a><span class="in">    └── tb.csv</span></span>
+<span id="cb66-39"><a href="#cb66-39" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-40"><a href="#cb66-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-41"><a href="#cb66-41" aria-hidden="true" tabindex="-1"></a>Run this once if the tidyverse is not installed:</span>
+<span id="cb66-42"><a href="#cb66-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-45"><a href="#cb66-45" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-46"><a href="#cb66-46" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb66-47"><a href="#cb66-47" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="st">"tidyverse"</span>)</span>
+<span id="cb66-48"><a href="#cb66-48" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-49"><a href="#cb66-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-50"><a href="#cb66-50" aria-hidden="true" tabindex="-1"></a>Load the tidyverse and the here packages at the beginning of the session.</span>
+<span id="cb66-51"><a href="#cb66-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-54"><a href="#cb66-54" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-55"><a href="#cb66-55" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: setup</span></span>
+<span id="cb66-56"><a href="#cb66-56" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb66-57"><a href="#cb66-57" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb66-58"><a href="#cb66-58" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-59"><a href="#cb66-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-60"><a href="#cb66-60" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb66-61"><a href="#cb66-61" aria-hidden="true" tabindex="-1"></a><span class="fu">## Today's workflow</span></span>
+<span id="cb66-62"><a href="#cb66-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-63"><a href="#cb66-63" aria-hidden="true" tabindex="-1"></a>**Import → Inspect → Identify observations → Tidy → Check**</span>
+<span id="cb66-64"><a href="#cb66-64" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb66-65"><a href="#cb66-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-66"><a href="#cb66-66" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 1: Import and inspect data {#sec-import}</span></span>
+<span id="cb66-67"><a href="#cb66-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-68"><a href="#cb66-68" aria-hidden="true" tabindex="-1"></a>A CSV is a plain-text file in which columns are separated by commas. We use <span class="in">`read_csv()`</span> to import the <span class="in">`stock-biomass-wide`</span> dataframe and assign the result to an object.</span>
+<span id="cb66-69"><a href="#cb66-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-72"><a href="#cb66-72" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-73"><a href="#cb66-73" aria-hidden="true" tabindex="-1"></a>? <span class="fu">read_csv</span>()</span>
+<span id="cb66-74"><a href="#cb66-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-75"><a href="#cb66-75" aria-hidden="true" tabindex="-1"></a>? <span class="fu">names</span>()</span>
+<span id="cb66-76"><a href="#cb66-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-77"><a href="#cb66-77" aria-hidden="true" tabindex="-1"></a>biomass_wide <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb66-78"><a href="#cb66-78" aria-hidden="true" tabindex="-1"></a>    <span class="fu">here</span>(</span>
+<span id="cb66-79"><a href="#cb66-79" aria-hidden="true" tabindex="-1"></a>        <span class="st">"week-03"</span>,</span>
+<span id="cb66-80"><a href="#cb66-80" aria-hidden="true" tabindex="-1"></a>        <span class="st">"tutorials"</span>,</span>
+<span id="cb66-81"><a href="#cb66-81" aria-hidden="true" tabindex="-1"></a>        <span class="st">"tutorial-03"</span>,</span>
+<span id="cb66-82"><a href="#cb66-82" aria-hidden="true" tabindex="-1"></a>        <span class="st">"data"</span>,</span>
+<span id="cb66-83"><a href="#cb66-83" aria-hidden="true" tabindex="-1"></a>        <span class="st">"stock-biomass-wide.csv"</span>),</span>
+<span id="cb66-84"><a href="#cb66-84" aria-hidden="true" tabindex="-1"></a>  <span class="at">na =</span> <span class="fu">c</span>(<span class="st">""</span>, <span class="st">"NA"</span>, <span class="st">"."</span>)</span>
+<span id="cb66-85"><a href="#cb66-85" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-86"><a href="#cb66-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-87"><a href="#cb66-87" aria-hidden="true" tabindex="-1"></a>biomass_wide</span>
+<span id="cb66-88"><a href="#cb66-88" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-89"><a href="#cb66-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-90"><a href="#cb66-90" aria-hidden="true" tabindex="-1"></a>The first argument to <span class="in">`read_csv()`</span> gives the **path** to the file. With the <span class="in">`{here}`</span> package, we list all folders after the root folder (here, <span class="in">`course-hub/`</span>).</span>
+<span id="cb66-91"><a href="#cb66-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-92"><a href="#cb66-92" aria-hidden="true" tabindex="-1"></a>The second argument is the <span class="in">`na`</span> argument, which identifies entries that should be treated as missing values. In this file, a period (<span class="in">`.`</span>) means that no value was reported. Usually, a cell is left blank if no value is reported.</span>
+<span id="cb66-93"><a href="#cb66-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-94"><a href="#cb66-94" aria-hidden="true" tabindex="-1"></a><span class="fu">### Inspect the imported data</span></span>
+<span id="cb66-95"><a href="#cb66-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-96"><a href="#cb66-96" aria-hidden="true" tabindex="-1"></a>Never assume that a file imported exactly as intended. Inspect it before continuing.</span>
+<span id="cb66-97"><a href="#cb66-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-100"><a href="#cb66-100" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-101"><a href="#cb66-101" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(biomass_wide)</span>
+<span id="cb66-102"><a href="#cb66-102" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-103"><a href="#cb66-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-106"><a href="#cb66-106" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-107"><a href="#cb66-107" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(biomass_wide)</span>
+<span id="cb66-108"><a href="#cb66-108" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-109"><a href="#cb66-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-110"><a href="#cb66-110" aria-hidden="true" tabindex="-1"></a><span class="in">`glimpse()`</span> is from the <span class="in">`{dplyr}`</span> package and this function lets you see the structure of your dataframe, showing you the number of rows and columns, variable names, variable types, and example values. <span class="in">`names()`</span> is a base-R function that prints the names of all columns. </span>
+<span id="cb66-111"><a href="#cb66-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-112"><a href="#cb66-112" aria-hidden="true" tabindex="-1"></a>Reminder of data/variable types:</span>
+<span id="cb66-113"><a href="#cb66-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-114"><a href="#cb66-114" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Abbreviation <span class="pp">|</span> Type                       <span class="pp">|</span></span>
+<span id="cb66-115"><a href="#cb66-115" aria-hidden="true" tabindex="-1"></a><span class="pp">|--------------|----------------------------|</span></span>
+<span id="cb66-116"><a href="#cb66-116" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`&lt;chr&gt;`</span>      <span class="pp">|</span> character text             <span class="pp">|</span></span>
+<span id="cb66-117"><a href="#cb66-117" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`&lt;dbl&gt;`</span>      <span class="pp">|</span> numeric value              <span class="pp">|</span></span>
+<span id="cb66-118"><a href="#cb66-118" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`&lt;int&gt;`</span>      <span class="pp">|</span> integer                    <span class="pp">|</span></span>
+<span id="cb66-119"><a href="#cb66-119" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`&lt;lgl&gt;`</span>      <span class="pp">|</span> logical: <span class="in">`TRUE`</span> or <span class="in">`FALSE`</span> <span class="pp">|</span></span>
+<span id="cb66-120"><a href="#cb66-120" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`&lt;date&gt;`</span>     <span class="pp">|</span> calendar date              <span class="pp">|</span></span>
+<span id="cb66-121"><a href="#cb66-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-122"><a href="#cb66-122" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb66-123"><a href="#cb66-123" aria-hidden="true" tabindex="-1"></a><span class="fu">## Pause and discuss</span></span>
+<span id="cb66-124"><a href="#cb66-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-125"><a href="#cb66-125" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>What does one row currently represent?</span>
+<span id="cb66-126"><a href="#cb66-126" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>Are <span class="in">`2021`</span>, <span class="in">`2022`</span>, <span class="in">`2023`</span>, and <span class="in">`2024`</span> variables or values?</span>
+<span id="cb66-127"><a href="#cb66-127" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>What measured variable is spread across those columns?</span>
+<span id="cb66-128"><a href="#cb66-128" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb66-129"><a href="#cb66-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-130"><a href="#cb66-130" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 2: Tidy the biomass data {#sec-biomass}</span></span>
+<span id="cb66-131"><a href="#cb66-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-132"><a href="#cb66-132" aria-hidden="true" tabindex="-1"></a>A dataset is tidy when:</span>
+<span id="cb66-133"><a href="#cb66-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-134"><a href="#cb66-134" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>each variable is a column;</span>
+<span id="cb66-135"><a href="#cb66-135" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>each observation is a row; and</span>
+<span id="cb66-136"><a href="#cb66-136" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>each value is a cell.</span>
+<span id="cb66-137"><a href="#cb66-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-138"><a href="#cb66-138" aria-hidden="true" tabindex="-1"></a>In <span class="in">`biomass_wide`</span>, years are stored as column names. Biomass is spread across several columns even though it is one measured variable.</span>
+<span id="cb66-139"><a href="#cb66-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-140"><a href="#cb66-140" aria-hidden="true" tabindex="-1"></a>The observational unit we want is:</span>
+<span id="cb66-141"><a href="#cb66-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-142"><a href="#cb66-142" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; One stock observed in one year.</span></span>
+<span id="cb66-143"><a href="#cb66-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-144"><a href="#cb66-144" aria-hidden="true" tabindex="-1"></a>A tidy version should contain the variables:</span>
+<span id="cb66-145"><a href="#cb66-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-146"><a href="#cb66-146" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`region`</span></span>
+<span id="cb66-147"><a href="#cb66-147" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`stock`</span></span>
+<span id="cb66-148"><a href="#cb66-148" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`year`</span></span>
+<span id="cb66-149"><a href="#cb66-149" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`biomass_t`</span></span>
+<span id="cb66-150"><a href="#cb66-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-151"><a href="#cb66-151" aria-hidden="true" tabindex="-1"></a><span class="fu">### Lengthen the data</span></span>
+<span id="cb66-152"><a href="#cb66-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-153"><a href="#cb66-153" aria-hidden="true" tabindex="-1"></a>Use <span class="in">`pivot_longer()`</span> when information that belongs in rows is spread across columns.</span>
+<span id="cb66-154"><a href="#cb66-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-155"><a href="#cb66-155" aria-hidden="true" tabindex="-1"></a>First, look at the documentation for <span class="in">`pivot_longer()`</span>. You see the description, usage, and examples. What are some of the listed arguments?</span>
+<span id="cb66-156"><a href="#cb66-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-159"><a href="#cb66-159" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-160"><a href="#cb66-160" aria-hidden="true" tabindex="-1"></a>? <span class="fu">pivot_longer</span>()</span>
+<span id="cb66-161"><a href="#cb66-161" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-162"><a href="#cb66-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-163"><a href="#cb66-163" aria-hidden="true" tabindex="-1"></a>Now let's use <span class="in">`pivot_longer()`</span> to **reshape** the <span class="in">`biomass_wide`</span> dataframe. We will want to provide which columns we want to pivot into longer format (<span class="in">`cols = `</span>) the name of the new column that will contain the original column names (<span class="in">`names_to = "year"`</span>), and the name of the new column that will contain their values (<span class="in">`values_to = "biomass_t"`</span>).</span>
+<span id="cb66-164"><a href="#cb66-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-165"><a href="#cb66-165" aria-hidden="true" tabindex="-1"></a>We will also start using the pipe <span class="in">`|&gt;`</span> operator, which takes the result on its left and passes it into the function on its right. We will learn more about the pipes next week in the data wrangling tutorial. Pipes have made coding simpler and easier to read. In the below example, we take the <span class="in">`biomass_wide`</span> dataframe, pipe (or pass) it into the function <span class="in">`pivot_longer()`</span>. </span>
+<span id="cb66-166"><a href="#cb66-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-169"><a href="#cb66-169" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-170"><a href="#cb66-170" aria-hidden="true" tabindex="-1"></a>biomass_long <span class="ot">&lt;-</span> biomass_wide <span class="sc">|&gt;</span></span>
+<span id="cb66-171"><a href="#cb66-171" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb66-172"><a href="#cb66-172" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"20"</span>),</span>
+<span id="cb66-173"><a href="#cb66-173" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"year"</span>,</span>
+<span id="cb66-174"><a href="#cb66-174" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"biomass_t"</span></span>
+<span id="cb66-175"><a href="#cb66-175" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-176"><a href="#cb66-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-177"><a href="#cb66-177" aria-hidden="true" tabindex="-1"></a>biomass_long</span>
+<span id="cb66-178"><a href="#cb66-178" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-179"><a href="#cb66-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-180"><a href="#cb66-180" aria-hidden="true" tabindex="-1"></a>Read the arguments as a sentence:</span>
+<span id="cb66-181"><a href="#cb66-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-182"><a href="#cb66-182" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; Take the columns whose names start with </span><span class="in">`20`</span><span class="at">, put their names into a new variable called </span><span class="in">`year`</span><span class="at">, and put their cell values into a new variable called </span><span class="in">`biomass_t`</span><span class="at">.</span></span>
+<span id="cb66-183"><a href="#cb66-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-184"><a href="#cb66-184" aria-hidden="true" tabindex="-1"></a>Compare the original and reshaped datasets.</span>
+<span id="cb66-185"><a href="#cb66-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-188"><a href="#cb66-188" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-189"><a href="#cb66-189" aria-hidden="true" tabindex="-1"></a>biomass_wide</span>
+<span id="cb66-190"><a href="#cb66-190" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-191"><a href="#cb66-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-194"><a href="#cb66-194" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-195"><a href="#cb66-195" aria-hidden="true" tabindex="-1"></a>biomass_long</span>
+<span id="cb66-196"><a href="#cb66-196" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-197"><a href="#cb66-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-198"><a href="#cb66-198" aria-hidden="true" tabindex="-1"></a>What do you notice?</span>
+<span id="cb66-199"><a href="#cb66-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-200"><a href="#cb66-200" aria-hidden="true" tabindex="-1"></a><span class="fu">### Check the result</span></span>
+<span id="cb66-201"><a href="#cb66-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-204"><a href="#cb66-204" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-205"><a href="#cb66-205" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(biomass_long)</span>
+<span id="cb66-206"><a href="#cb66-206" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-207"><a href="#cb66-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-208"><a href="#cb66-208" aria-hidden="true" tabindex="-1"></a>What needs fixing? hint: look at the <span class="in">`year`</span> variable type. </span>
+<span id="cb66-209"><a href="#cb66-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-210"><a href="#cb66-210" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">details</span><span class="dt">&gt;</span></span>
+<span id="cb66-211"><a href="#cb66-211" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">summary</span><span class="dt">&gt;</span>Click to show the answer and how to fix it<span class="dt">&lt;/</span><span class="kw">summary</span><span class="dt">&gt;</span></span>
+<span id="cb66-212"><a href="#cb66-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-213"><a href="#cb66-213" aria-hidden="true" tabindex="-1"></a><span class="in">`year`</span> is character text because it came from column names. Convert it to an integer.</span>
+<span id="cb66-214"><a href="#cb66-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-215"><a href="#cb66-215" aria-hidden="true" tabindex="-1"></a><span class="in">`parse_integer()`</span> converts character values to whole-number integers and reports values that cannot be parsed correctly. You can also use <span class="in">`as.numeric()`</span>, which would convert them to numeric double values.</span>
+<span id="cb66-216"><a href="#cb66-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-219"><a href="#cb66-219" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-220"><a href="#cb66-220" aria-hidden="true" tabindex="-1"></a>biomass_long <span class="ot">&lt;-</span> biomass_long <span class="sc">|&gt;</span></span>
+<span id="cb66-221"><a href="#cb66-221" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">parse_integer</span>(year))</span>
+<span id="cb66-222"><a href="#cb66-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-223"><a href="#cb66-223" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(biomass_long)</span>
+<span id="cb66-224"><a href="#cb66-224" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-225"><a href="#cb66-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-226"><a href="#cb66-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-227"><a href="#cb66-227" aria-hidden="true" tabindex="-1"></a>Now one row represents one stock observed in one year.</span>
+<span id="cb66-228"><a href="#cb66-228" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">details</span><span class="dt">&gt;</span> </span>
+<span id="cb66-229"><a href="#cb66-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-230"><a href="#cb66-230" aria-hidden="true" tabindex="-1"></a><span class="fu">### Your turn</span></span>
+<span id="cb66-231"><a href="#cb66-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-232"><a href="#cb66-232" aria-hidden="true" tabindex="-1"></a>Complete the code so the year columns become a variable named <span class="in">`survey_year`</span> and their values become a variable named <span class="in">`biomass`</span>.</span>
+<span id="cb66-233"><a href="#cb66-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-234"><a href="#cb66-234" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb66-235"><a href="#cb66-235" aria-hidden="true" tabindex="-1"></a>biomass_wide <span class="sc">|&gt;</span></span>
+<span id="cb66-236"><a href="#cb66-236" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb66-237"><a href="#cb66-237" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> ____________________,</span>
+<span id="cb66-238"><a href="#cb66-238" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> ____________________,</span>
+<span id="cb66-239"><a href="#cb66-239" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> ____________________</span>
+<span id="cb66-240"><a href="#cb66-240" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-241"><a href="#cb66-241" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-242"><a href="#cb66-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-243"><a href="#cb66-243" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb66-244"><a href="#cb66-244" aria-hidden="true" tabindex="-1"></a><span class="fu">## Solution</span></span>
+<span id="cb66-245"><a href="#cb66-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-248"><a href="#cb66-248" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-249"><a href="#cb66-249" aria-hidden="true" tabindex="-1"></a>biomass_wide <span class="sc">|&gt;</span></span>
+<span id="cb66-250"><a href="#cb66-250" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb66-251"><a href="#cb66-251" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"20"</span>),</span>
+<span id="cb66-252"><a href="#cb66-252" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"survey_year"</span>,</span>
+<span id="cb66-253"><a href="#cb66-253" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"biomass"</span></span>
+<span id="cb66-254"><a href="#cb66-254" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-255"><a href="#cb66-255" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-256"><a href="#cb66-256" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb66-257"><a href="#cb66-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-258"><a href="#cb66-258" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 3: Observations stored in multiple tables {#sec-lotr}</span></span>
+<span id="cb66-259"><a href="#cb66-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-260"><a href="#cb66-260" aria-hidden="true" tabindex="-1"></a>The Lord of the Rings data record the number of words spoken by characters of different races and genders in each film. The observations are split among three files—one file per film.</span>
+<span id="cb66-261"><a href="#cb66-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-262"><a href="#cb66-262" aria-hidden="true" tabindex="-1"></a>What is the file path one would need to use to import these files if they are in the data subfolder of the tutorials subfolder of week-03? </span>
+<span id="cb66-263"><a href="#cb66-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-264"><a href="#cb66-264" aria-hidden="true" tabindex="-1"></a><span class="in">```r</span></span>
+<span id="cb66-265"><a href="#cb66-265" aria-hidden="true" tabindex="-1"></a>    file_path <span class="ot">&lt;-</span> <span class="fu">here</span>(</span>
+<span id="cb66-266"><a href="#cb66-266" aria-hidden="true" tabindex="-1"></a>        _______,</span>
+<span id="cb66-267"><a href="#cb66-267" aria-hidden="true" tabindex="-1"></a>        _______,</span>
+<span id="cb66-268"><a href="#cb66-268" aria-hidden="true" tabindex="-1"></a>        _______,</span>
+<span id="cb66-269"><a href="#cb66-269" aria-hidden="true" tabindex="-1"></a>        _______,</span>
+<span id="cb66-270"><a href="#cb66-270" aria-hidden="true" tabindex="-1"></a>        <span class="st">"The_Fellowship_Of_The_Ring.csv"</span></span>
+<span id="cb66-271"><a href="#cb66-271" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-272"><a href="#cb66-272" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-273"><a href="#cb66-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-274"><a href="#cb66-274" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip collapse="true"}</span>
+<span id="cb66-275"><a href="#cb66-275" aria-hidden="true" tabindex="-1"></a><span class="fu">## Solution</span></span>
+<span id="cb66-276"><a href="#cb66-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-279"><a href="#cb66-279" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-280"><a href="#cb66-280" aria-hidden="true" tabindex="-1"></a>    data_file_path <span class="ot">&lt;-</span> <span class="fu">here</span>(</span>
+<span id="cb66-281"><a href="#cb66-281" aria-hidden="true" tabindex="-1"></a>        <span class="st">"week-03"</span>,</span>
+<span id="cb66-282"><a href="#cb66-282" aria-hidden="true" tabindex="-1"></a>        <span class="st">"tutorials"</span>,</span>
+<span id="cb66-283"><a href="#cb66-283" aria-hidden="true" tabindex="-1"></a>        <span class="st">"tutorial-03"</span>,</span>
+<span id="cb66-284"><a href="#cb66-284" aria-hidden="true" tabindex="-1"></a>        <span class="st">"data"</span>)</span>
+<span id="cb66-285"><a href="#cb66-285" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-286"><a href="#cb66-286" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb66-287"><a href="#cb66-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-288"><a href="#cb66-288" aria-hidden="true" tabindex="-1"></a>Make sure you run the above code because you will use the <span class="in">`data_file_path`</span> object below with the <span class="in">`file.path`</span> function. </span>
+<span id="cb66-289"><a href="#cb66-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-290"><a href="#cb66-290" aria-hidden="true" tabindex="-1"></a>The <span class="in">`file.path`</span> function constructs a path to a file.</span>
+<span id="cb66-291"><a href="#cb66-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-294"><a href="#cb66-294" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-295"><a href="#cb66-295" aria-hidden="true" tabindex="-1"></a>? <span class="fu">file.path</span>()</span>
+<span id="cb66-296"><a href="#cb66-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-297"><a href="#cb66-297" aria-hidden="true" tabindex="-1"></a>LOTR_file_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(data_file_path, <span class="st">"The_Fellowship_Of_The_Ring.csv"</span>)</span>
+<span id="cb66-298"><a href="#cb66-298" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-299"><a href="#cb66-299" aria-hidden="true" tabindex="-1"></a>LOTR_file_path</span>
+<span id="cb66-300"><a href="#cb66-300" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-301"><a href="#cb66-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-302"><a href="#cb66-302" aria-hidden="true" tabindex="-1"></a>Now that you know about creating file paths, let's read in out datasets. Because we have more than one dataset file, we won't use the above code (<span class="in">`LOTR_file_path`</span>). We will use <span class="in">`file.path`</span> and <span class="in">`data_file_path`</span> in the <span class="in">`read_csv`</span> function. <span class="in">`read_csv`</span> normally prints out a lot of information inferred from the file. You can use the <span class="in">`show_col_types = FALSE`</span> argument to prevent this. </span>
+<span id="cb66-303"><a href="#cb66-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-304"><a href="#cb66-304" aria-hidden="true" tabindex="-1"></a><span class="fu">### Import the three files</span></span>
+<span id="cb66-305"><a href="#cb66-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-308"><a href="#cb66-308" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-309"><a href="#cb66-309" aria-hidden="true" tabindex="-1"></a>fellowship <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb66-310"><a href="#cb66-310" aria-hidden="true" tabindex="-1"></a>    <span class="fu">file.path</span>(data_file_path,</span>
+<span id="cb66-311"><a href="#cb66-311" aria-hidden="true" tabindex="-1"></a>    <span class="st">"The_Fellowship_Of_The_Ring.csv"</span>),</span>
+<span id="cb66-312"><a href="#cb66-312" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb66-313"><a href="#cb66-313" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-314"><a href="#cb66-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-315"><a href="#cb66-315" aria-hidden="true" tabindex="-1"></a>two_towers <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb66-316"><a href="#cb66-316" aria-hidden="true" tabindex="-1"></a>    <span class="fu">file.path</span>(data_file_path,</span>
+<span id="cb66-317"><a href="#cb66-317" aria-hidden="true" tabindex="-1"></a>  <span class="st">"The_Two_Towers.csv"</span>),</span>
+<span id="cb66-318"><a href="#cb66-318" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb66-319"><a href="#cb66-319" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-320"><a href="#cb66-320" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-321"><a href="#cb66-321" aria-hidden="true" tabindex="-1"></a>return_king <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb66-322"><a href="#cb66-322" aria-hidden="true" tabindex="-1"></a>    <span class="fu">file.path</span>(data_file_path,</span>
+<span id="cb66-323"><a href="#cb66-323" aria-hidden="true" tabindex="-1"></a>  <span class="st">"The_Return_Of_The_King.csv"</span>),</span>
+<span id="cb66-324"><a href="#cb66-324" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb66-325"><a href="#cb66-325" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-326"><a href="#cb66-326" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-327"><a href="#cb66-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-328"><a href="#cb66-328" aria-hidden="true" tabindex="-1"></a>Inspect one of the datasets:</span>
+<span id="cb66-329"><a href="#cb66-329" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-332"><a href="#cb66-332" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-333"><a href="#cb66-333" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(fellowship)</span>
+<span id="cb66-334"><a href="#cb66-334" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-335"><a href="#cb66-335" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-336"><a href="#cb66-336" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-337"><a href="#cb66-337" aria-hidden="true" tabindex="-1"></a>See if the datasets contain the same information:</span>
+<span id="cb66-338"><a href="#cb66-338" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-341"><a href="#cb66-341" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-342"><a href="#cb66-342" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(fellowship)</span>
+<span id="cb66-343"><a href="#cb66-343" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(two_towers)</span>
+<span id="cb66-344"><a href="#cb66-344" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(return_king)</span>
+<span id="cb66-345"><a href="#cb66-345" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-346"><a href="#cb66-346" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-347"><a href="#cb66-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-348"><a href="#cb66-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-349"><a href="#cb66-349" aria-hidden="true" tabindex="-1"></a>Each file contains the same variables but different observations. Stack them with <span class="in">`bind_rows()`</span>. <span class="in">`bind_rows()`</span> is a <span class="in">`tidyverse`</span> (actually <span class="in">`{dplyr}`</span>) function that binds any number of data frames together by row (i.e., stack them). The output will contain all columns that appear in any of the inputs. (There is also a function <span class="in">`bind_cols`</span>).</span>
+<span id="cb66-350"><a href="#cb66-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-351"><a href="#cb66-351" aria-hidden="true" tabindex="-1"></a>Here, we combine the three dataframes together and then pipe the output into another function, <span class="in">`rename_with`</span> to convert all column names to lowercase (using <span class="in">`str_to_lower`</span>). </span>
+<span id="cb66-352"><a href="#cb66-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-355"><a href="#cb66-355" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-356"><a href="#cb66-356" aria-hidden="true" tabindex="-1"></a>lotr_wide <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb66-357"><a href="#cb66-357" aria-hidden="true" tabindex="-1"></a>    fellowship,</span>
+<span id="cb66-358"><a href="#cb66-358" aria-hidden="true" tabindex="-1"></a>    two_towers,</span>
+<span id="cb66-359"><a href="#cb66-359" aria-hidden="true" tabindex="-1"></a>    return_king) <span class="sc">|&gt;</span></span>
+<span id="cb66-360"><a href="#cb66-360" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename_with</span>(str_to_lower)</span>
+<span id="cb66-361"><a href="#cb66-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-362"><a href="#cb66-362" aria-hidden="true" tabindex="-1"></a>lotr_wide</span>
+<span id="cb66-363"><a href="#cb66-363" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-364"><a href="#cb66-364" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-365"><a href="#cb66-365" aria-hidden="true" tabindex="-1"></a><span class="in">`bind_rows()`</span> is appropriate because the tables have the same columns and each contains additional rows of the same kind of observation.</span>
+<span id="cb66-366"><a href="#cb66-366" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-367"><a href="#cb66-367" aria-hidden="true" tabindex="-1"></a>::: callout-warning</span>
+<span id="cb66-368"><a href="#cb66-368" aria-hidden="true" tabindex="-1"></a><span class="fu">## `bind_rows()` is not a join</span></span>
+<span id="cb66-369"><a href="#cb66-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-370"><a href="#cb66-370" aria-hidden="true" tabindex="-1"></a>Use <span class="in">`bind_rows()`</span> to stack similar observations vertically. Use a join (e.g., <span class="in">`left_join()`</span> <span class="co">[</span><span class="ot">which we will learn about later</span><span class="co">]</span>) when separate tables contain different variables that must be matched using an identifier.</span>
+<span id="cb66-371"><a href="#cb66-371" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb66-372"><a href="#cb66-372" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-373"><a href="#cb66-373" aria-hidden="true" tabindex="-1"></a><span class="fu">### Tidy the gender columns</span></span>
+<span id="cb66-374"><a href="#cb66-374" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-375"><a href="#cb66-375" aria-hidden="true" tabindex="-1"></a>The columns <span class="in">`female`</span> and <span class="in">`male`</span> do not represent two different measured variables. They contain values of the variable <span class="in">`gender`</span>. Their cells contain values of the variable <span class="in">`words`</span>.</span>
+<span id="cb66-376"><a href="#cb66-376" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-379"><a href="#cb66-379" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-380"><a href="#cb66-380" aria-hidden="true" tabindex="-1"></a>lotr_tidy <span class="ot">&lt;-</span> lotr_wide <span class="sc">|&gt;</span></span>
+<span id="cb66-381"><a href="#cb66-381" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb66-382"><a href="#cb66-382" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">c</span>(female, male),</span>
+<span id="cb66-383"><a href="#cb66-383" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"gender"</span>,</span>
+<span id="cb66-384"><a href="#cb66-384" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"words"</span></span>
+<span id="cb66-385"><a href="#cb66-385" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-386"><a href="#cb66-386" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-387"><a href="#cb66-387" aria-hidden="true" tabindex="-1"></a>lotr_tidy</span>
+<span id="cb66-388"><a href="#cb66-388" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-389"><a href="#cb66-389" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-390"><a href="#cb66-390" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb66-391"><a href="#cb66-391" aria-hidden="true" tabindex="-1"></a><span class="fu">## Pause and discuss</span></span>
+<span id="cb66-392"><a href="#cb66-392" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-393"><a href="#cb66-393" aria-hidden="true" tabindex="-1"></a>What does one row represent before the pivot? What does one row represent afterward?</span>
+<span id="cb66-394"><a href="#cb66-394" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb66-395"><a href="#cb66-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-396"><a href="#cb66-396" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">details</span><span class="dt">&gt;</span></span>
+<span id="cb66-397"><a href="#cb66-397" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">summary</span><span class="dt">&gt;</span>Click to show the answer <span class="dt">&lt;/</span><span class="kw">summary</span><span class="dt">&gt;</span></span>
+<span id="cb66-398"><a href="#cb66-398" aria-hidden="true" tabindex="-1"></a>Before the pivot: One row represents a unique combination of film and race, with the word counts for female and male characters stored in separate columns.</span>
+<span id="cb66-399"><a href="#cb66-399" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-400"><a href="#cb66-400" aria-hidden="true" tabindex="-1"></a>After the pivot: One row represents a unique combination of film, race, and gender, with the corresponding word count stored in the <span class="in">`words`</span> column.</span>
+<span id="cb66-401"><a href="#cb66-401" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-402"><a href="#cb66-402" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">details</span><span class="dt">&gt;</span></span>
+<span id="cb66-403"><a href="#cb66-403" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-404"><a href="#cb66-404" aria-hidden="true" tabindex="-1"></a><span class="fu">### Use the tidy data</span></span>
+<span id="cb66-405"><a href="#cb66-405" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-406"><a href="#cb66-406" aria-hidden="true" tabindex="-1"></a>To illustrate how useful tidy data is for working with the <span class="in">`{tidyverse}`</span> packages, we will produce a summary of the number of words spoken by males and females. <span class="in">`group_by`</span> is a function that groups a dataframe by the specified variable(s) so operations can be performed on a per-group basis. <span class="in">`summarize`</span> (or <span class="in">`summarise`</span> as the package developer is British) creates a new data frame that returns one row for each combination of grouping variables. If no grouping variables, the output will have a single row summarizing all observations in the input. Below, we use <span class="in">`group_by`</span> and <span class="in">`summarize`</span> to create a new column <span class="in">`total_words`</span>.</span>
+<span id="cb66-407"><a href="#cb66-407" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-410"><a href="#cb66-410" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-411"><a href="#cb66-411" aria-hidden="true" tabindex="-1"></a>lotr_tidy <span class="sc">|&gt;</span></span>
+<span id="cb66-412"><a href="#cb66-412" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(gender) <span class="sc">|&gt;</span></span>
+<span id="cb66-413"><a href="#cb66-413" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb66-414"><a href="#cb66-414" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_words =</span> <span class="fu">sum</span>(words),</span>
+<span id="cb66-415"><a href="#cb66-415" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb66-416"><a href="#cb66-416" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-417"><a href="#cb66-417" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-418"><a href="#cb66-418" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-419"><a href="#cb66-419" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 4: Multiple variables encoded in column names {#sec-tb}</span></span>
+<span id="cb66-420"><a href="#cb66-420" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-421"><a href="#cb66-421" aria-hidden="true" tabindex="-1"></a>The tuberculosis dataset records confirmed cases by country, year, sex, and age group.</span>
+<span id="cb66-422"><a href="#cb66-422" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-425"><a href="#cb66-425" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-426"><a href="#cb66-426" aria-hidden="true" tabindex="-1"></a>tb <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb66-427"><a href="#cb66-427" aria-hidden="true" tabindex="-1"></a>    <span class="fu">file.path</span>(</span>
+<span id="cb66-428"><a href="#cb66-428" aria-hidden="true" tabindex="-1"></a>        data_file_path,</span>
+<span id="cb66-429"><a href="#cb66-429" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tb.csv"</span>),</span>
+<span id="cb66-430"><a href="#cb66-430" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb66-431"><a href="#cb66-431" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-432"><a href="#cb66-432" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-433"><a href="#cb66-433" aria-hidden="true" tabindex="-1"></a>tb</span>
+<span id="cb66-434"><a href="#cb66-434" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-435"><a href="#cb66-435" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-436"><a href="#cb66-436" aria-hidden="true" tabindex="-1"></a>Inspect the column names.</span>
+<span id="cb66-437"><a href="#cb66-437" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-440"><a href="#cb66-440" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-441"><a href="#cb66-441" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tb)</span>
+<span id="cb66-442"><a href="#cb66-442" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-443"><a href="#cb66-443" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-444"><a href="#cb66-444" aria-hidden="true" tabindex="-1"></a>A name such as <span class="in">`m1524`</span> contains two values:</span>
+<span id="cb66-445"><a href="#cb66-445" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-446"><a href="#cb66-446" aria-hidden="true" tabindex="-1"></a><span class="in">``` text</span></span>
+<span id="cb66-447"><a href="#cb66-447" aria-hidden="true" tabindex="-1"></a><span class="in">m1524</span></span>
+<span id="cb66-448"><a href="#cb66-448" aria-hidden="true" tabindex="-1"></a><span class="in">|  |</span></span>
+<span id="cb66-449"><a href="#cb66-449" aria-hidden="true" tabindex="-1"></a><span class="in">|  └─ age group: 15–24</span></span>
+<span id="cb66-450"><a href="#cb66-450" aria-hidden="true" tabindex="-1"></a><span class="in">└──── gender: male</span></span>
+<span id="cb66-451"><a href="#cb66-451" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-452"><a href="#cb66-452" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-453"><a href="#cb66-453" aria-hidden="true" tabindex="-1"></a>The column name is therefore a combination of two underlying variables: <span class="in">`gender`</span> and <span class="in">`age`</span>.</span>
+<span id="cb66-454"><a href="#cb66-454" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-455"><a href="#cb66-455" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step 1: Pivot the case columns longer</span></span>
+<span id="cb66-456"><a href="#cb66-456" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-457"><a href="#cb66-457" aria-hidden="true" tabindex="-1"></a>Use similar code as before to reshape the data frame. <span class="in">`values_drop_na = TRUE`</span> removes rows created by <span class="in">`pivot_longer()`</span> when the value places in the cases column is <span class="in">`NA`</span>. Without it, the long data would include combinations of country, year, and demographic group with missing case counts.</span>
+<span id="cb66-458"><a href="#cb66-458" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-461"><a href="#cb66-461" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-462"><a href="#cb66-462" aria-hidden="true" tabindex="-1"></a>tb_long <span class="ot">&lt;-</span> tb <span class="sc">|&gt;</span></span>
+<span id="cb66-463"><a href="#cb66-463" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb66-464"><a href="#cb66-464" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(iso2, year),</span>
+<span id="cb66-465"><a href="#cb66-465" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"demographic"</span>,</span>
+<span id="cb66-466"><a href="#cb66-466" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"cases"</span></span>
+<span id="cb66-467"><a href="#cb66-467" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-468"><a href="#cb66-468" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-469"><a href="#cb66-469" aria-hidden="true" tabindex="-1"></a>tb_long</span>
+<span id="cb66-470"><a href="#cb66-470" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-471"><a href="#cb66-471" aria-hidden="true" tabindex="-1"></a>tb_long <span class="ot">&lt;-</span> tb <span class="sc">|&gt;</span></span>
+<span id="cb66-472"><a href="#cb66-472" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb66-473"><a href="#cb66-473" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(iso2, year),</span>
+<span id="cb66-474"><a href="#cb66-474" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"demographic"</span>,</span>
+<span id="cb66-475"><a href="#cb66-475" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"cases"</span>,</span>
+<span id="cb66-476"><a href="#cb66-476" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_drop_na =</span> <span class="cn">TRUE</span></span>
+<span id="cb66-477"><a href="#cb66-477" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-478"><a href="#cb66-478" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-479"><a href="#cb66-479" aria-hidden="true" tabindex="-1"></a>tb_long</span>
+<span id="cb66-480"><a href="#cb66-480" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-481"><a href="#cb66-481" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-482"><a href="#cb66-482" aria-hidden="true" tabindex="-1"></a>The new <span class="in">`demographic`</span> column is still not tidy because each value combines gender and age.</span>
+<span id="cb66-483"><a href="#cb66-483" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-484"><a href="#cb66-484" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step 2: Separate the encoded variables</span></span>
+<span id="cb66-485"><a href="#cb66-485" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-486"><a href="#cb66-486" aria-hidden="true" tabindex="-1"></a>The first character of <span class="in">`demographic`</span> indicates <span class="in">`gender`</span>, while the remaining characters contain the age code. We can separate these components using <span class="in">`separate_wider_regex()`</span> from the <span class="in">`{tidyr}`</span> package. This function splits a character column into multiple columns based on regular expression patterns. Regular expressions are patterns used to match specific arrangements of characters within text. Here, <span class="in">`"[mf]"`</span> matches either <span class="in">`"m"`</span> or <span class="in">`"f"`</span>, and <span class="in">`".*"`</span> matches all remaining characters. Related functions can instead split values at delimiters, such as commas, or at fixed character widths. </span>
+<span id="cb66-487"><a href="#cb66-487" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-490"><a href="#cb66-490" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-491"><a href="#cb66-491" aria-hidden="true" tabindex="-1"></a>tb_tidy <span class="ot">&lt;-</span> tb_long <span class="sc">|&gt;</span></span>
+<span id="cb66-492"><a href="#cb66-492" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_wider_regex</span>(</span>
+<span id="cb66-493"><a href="#cb66-493" aria-hidden="true" tabindex="-1"></a>    demographic,</span>
+<span id="cb66-494"><a href="#cb66-494" aria-hidden="true" tabindex="-1"></a>    <span class="at">patterns =</span> <span class="fu">c</span>(</span>
+<span id="cb66-495"><a href="#cb66-495" aria-hidden="true" tabindex="-1"></a>      <span class="at">gender =</span> <span class="st">"[mf]"</span>,</span>
+<span id="cb66-496"><a href="#cb66-496" aria-hidden="true" tabindex="-1"></a>      <span class="at">age =</span> <span class="st">".*"</span></span>
+<span id="cb66-497"><a href="#cb66-497" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb66-498"><a href="#cb66-498" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-499"><a href="#cb66-499" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-500"><a href="#cb66-500" aria-hidden="true" tabindex="-1"></a>tb_tidy</span>
+<span id="cb66-501"><a href="#cb66-501" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-502"><a href="#cb66-502" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-503"><a href="#cb66-503" aria-hidden="true" tabindex="-1"></a>Now each underlying variable has its own column.</span>
+<span id="cb66-504"><a href="#cb66-504" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-505"><a href="#cb66-505" aria-hidden="true" tabindex="-1"></a><span class="fu">### Replace the gender codes</span></span>
+<span id="cb66-506"><a href="#cb66-506" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-507"><a href="#cb66-507" aria-hidden="true" tabindex="-1"></a>Abbreviations are not always so clear. Avoid if you can. Let's spell out what <span class="in">`m`</span> and <span class="in">`f`</span> mean. </span>
+<span id="cb66-508"><a href="#cb66-508" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-511"><a href="#cb66-511" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-512"><a href="#cb66-512" aria-hidden="true" tabindex="-1"></a>tb_tidy <span class="ot">&lt;-</span> tb_tidy <span class="sc">|&gt;</span></span>
+<span id="cb66-513"><a href="#cb66-513" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb66-514"><a href="#cb66-514" aria-hidden="true" tabindex="-1"></a>    <span class="at">gender =</span> <span class="fu">recode</span>(</span>
+<span id="cb66-515"><a href="#cb66-515" aria-hidden="true" tabindex="-1"></a>      gender,</span>
+<span id="cb66-516"><a href="#cb66-516" aria-hidden="true" tabindex="-1"></a>      <span class="at">m =</span> <span class="st">"male"</span>,</span>
+<span id="cb66-517"><a href="#cb66-517" aria-hidden="true" tabindex="-1"></a>      <span class="at">f =</span> <span class="st">"female"</span></span>
+<span id="cb66-518"><a href="#cb66-518" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb66-519"><a href="#cb66-519" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-520"><a href="#cb66-520" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-521"><a href="#cb66-521" aria-hidden="true" tabindex="-1"></a>tb_tidy</span>
+<span id="cb66-522"><a href="#cb66-522" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-523"><a href="#cb66-523" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-524"><a href="#cb66-524" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb66-525"><a href="#cb66-525" aria-hidden="true" tabindex="-1"></a><span class="fu">## Observational unit</span></span>
+<span id="cb66-526"><a href="#cb66-526" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-527"><a href="#cb66-527" aria-hidden="true" tabindex="-1"></a>After tidying, one row represents the reported number of cases for one country, year, gender, and age group.</span>
+<span id="cb66-528"><a href="#cb66-528" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb66-529"><a href="#cb66-529" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-530"><a href="#cb66-530" aria-hidden="true" tabindex="-1"></a>The age codes can also be converted to readable labels, but we will leave that as an optional extension.</span>
+<span id="cb66-531"><a href="#cb66-531" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-532"><a href="#cb66-532" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part 5: Exporting data frames {#sec-tb}</span></span>
+<span id="cb66-533"><a href="#cb66-533" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-534"><a href="#cb66-534" aria-hidden="true" tabindex="-1"></a>Use <span class="in">`write_csv()`</span> from the <span class="in">`{readr}`</span> package to save a data frame as a CSV file. The first argument is the data frame to save, and the second is the file path and filename. Unlike base R’s <span class="in">`write.csv()`</span>, <span class="in">`write_csv()`</span> does not add row names as an extra column.</span>
+<span id="cb66-535"><a href="#cb66-535" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-538"><a href="#cb66-538" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-539"><a href="#cb66-539" aria-hidden="true" tabindex="-1"></a><span class="co"># create a path for the output file</span></span>
+<span id="cb66-540"><a href="#cb66-540" aria-hidden="true" tabindex="-1"></a>output_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(</span>
+<span id="cb66-541"><a href="#cb66-541" aria-hidden="true" tabindex="-1"></a>  data_file_path,</span>
+<span id="cb66-542"><a href="#cb66-542" aria-hidden="true" tabindex="-1"></a>  <span class="st">"lotr_tidy.csv"</span></span>
+<span id="cb66-543"><a href="#cb66-543" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-544"><a href="#cb66-544" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-545"><a href="#cb66-545" aria-hidden="true" tabindex="-1"></a><span class="co"># save the tidy data as a CSV file</span></span>
+<span id="cb66-546"><a href="#cb66-546" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(</span>
+<span id="cb66-547"><a href="#cb66-547" aria-hidden="true" tabindex="-1"></a>  lotr_tidy,</span>
+<span id="cb66-548"><a href="#cb66-548" aria-hidden="true" tabindex="-1"></a>  output_file</span>
+<span id="cb66-549"><a href="#cb66-549" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-550"><a href="#cb66-550" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-551"><a href="#cb66-551" aria-hidden="true" tabindex="-1"></a><span class="co"># check that the file exists</span></span>
+<span id="cb66-552"><a href="#cb66-552" aria-hidden="true" tabindex="-1"></a><span class="fu">file.exists</span>(output_file)</span>
+<span id="cb66-553"><a href="#cb66-553" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-554"><a href="#cb66-554" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-555"><a href="#cb66-555" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-556"><a href="#cb66-556" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-557"><a href="#cb66-557" aria-hidden="true" tabindex="-1"></a><span class="fu">## Recap {#sec-recap}</span></span>
+<span id="cb66-558"><a href="#cb66-558" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-559"><a href="#cb66-559" aria-hidden="true" tabindex="-1"></a><span class="fu">### Import and inspect</span></span>
+<span id="cb66-560"><a href="#cb66-560" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-563"><a href="#cb66-563" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-564"><a href="#cb66-564" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb66-565"><a href="#cb66-565" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
+<span id="cb66-566"><a href="#cb66-566" aria-hidden="true" tabindex="-1"></a>    <span class="fu">here</span>(<span class="st">"insert-file-path"</span>,</span>
+<span id="cb66-567"><a href="#cb66-567" aria-hidden="true" tabindex="-1"></a>             <span class="st">"file.csv"</span>))</span>
+<span id="cb66-568"><a href="#cb66-568" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span>
+<span id="cb66-569"><a href="#cb66-569" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-570"><a href="#cb66-570" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-571"><a href="#cb66-571" aria-hidden="true" tabindex="-1"></a><span class="fu">### Stack tables containing the same variables</span></span>
+<span id="cb66-572"><a href="#cb66-572" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-575"><a href="#cb66-575" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-576"><a href="#cb66-576" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb66-577"><a href="#cb66-577" aria-hidden="true" tabindex="-1"></a>combined <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(table1, table2)</span>
+<span id="cb66-578"><a href="#cb66-578" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-579"><a href="#cb66-579" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-580"><a href="#cb66-580" aria-hidden="true" tabindex="-1"></a><span class="fu">### Move column names into rows</span></span>
+<span id="cb66-581"><a href="#cb66-581" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-584"><a href="#cb66-584" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-585"><a href="#cb66-585" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb66-586"><a href="#cb66-586" aria-hidden="true" tabindex="-1"></a>data_long <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
+<span id="cb66-587"><a href="#cb66-587" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb66-588"><a href="#cb66-588" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> columns_to_pivot,</span>
+<span id="cb66-589"><a href="#cb66-589" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"new_variable"</span>,</span>
+<span id="cb66-590"><a href="#cb66-590" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"measured_value"</span></span>
+<span id="cb66-591"><a href="#cb66-591" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-592"><a href="#cb66-592" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-593"><a href="#cb66-593" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-594"><a href="#cb66-594" aria-hidden="true" tabindex="-1"></a><span class="fu">### Split an encoded column into variables</span></span>
+<span id="cb66-595"><a href="#cb66-595" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-598"><a href="#cb66-598" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-599"><a href="#cb66-599" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb66-600"><a href="#cb66-600" aria-hidden="true" tabindex="-1"></a>data_tidy <span class="ot">&lt;-</span> data_long <span class="sc">|&gt;</span></span>
+<span id="cb66-601"><a href="#cb66-601" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_wider_regex</span>(</span>
+<span id="cb66-602"><a href="#cb66-602" aria-hidden="true" tabindex="-1"></a>    combined_variable,</span>
+<span id="cb66-603"><a href="#cb66-603" aria-hidden="true" tabindex="-1"></a>    <span class="at">patterns =</span> <span class="fu">c</span>(</span>
+<span id="cb66-604"><a href="#cb66-604" aria-hidden="true" tabindex="-1"></a>      <span class="at">variable_1 =</span> <span class="st">"pattern_1"</span>,</span>
+<span id="cb66-605"><a href="#cb66-605" aria-hidden="true" tabindex="-1"></a>      <span class="at">variable_2 =</span> <span class="st">"pattern_2"</span></span>
+<span id="cb66-606"><a href="#cb66-606" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb66-607"><a href="#cb66-607" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-608"><a href="#cb66-608" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-609"><a href="#cb66-609" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-610"><a href="#cb66-610" aria-hidden="true" tabindex="-1"></a><span class="fu">### Which function would you use?</span></span>
+<span id="cb66-611"><a href="#cb66-611" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-612"><a href="#cb66-612" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Situation                               <span class="pp">|</span> Function                 <span class="pp">|</span></span>
+<span id="cb66-613"><a href="#cb66-613" aria-hidden="true" tabindex="-1"></a><span class="pp">|-----------------------------------------|--------------------------|</span></span>
+<span id="cb66-614"><a href="#cb66-614" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Read a CSV file                         <span class="pp">|</span> <span class="in">`read_csv()`</span>             <span class="pp">|</span></span>
+<span id="cb66-615"><a href="#cb66-615" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Inspect column types                    <span class="pp">|</span> <span class="in">`glimpse()`</span>              <span class="pp">|</span></span>
+<span id="cb66-616"><a href="#cb66-616" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Stack the same kinds of observations    <span class="pp">|</span> <span class="in">`bind_rows()`</span>            <span class="pp">|</span></span>
+<span id="cb66-617"><a href="#cb66-617" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Move column names into rows             <span class="pp">|</span> <span class="in">`pivot_longer()`</span>         <span class="pp">|</span></span>
+<span id="cb66-618"><a href="#cb66-618" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Split one encoded column into variables <span class="pp">|</span> <span class="in">`separate_wider_regex()`</span> <span class="pp">|</span></span>
+<span id="cb66-619"><a href="#cb66-619" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-620"><a href="#cb66-620" aria-hidden="true" tabindex="-1"></a><span class="fu">### Questions to ask before tidying</span></span>
+<span id="cb66-621"><a href="#cb66-621" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-622"><a href="#cb66-622" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>What are the variables?</span>
+<span id="cb66-623"><a href="#cb66-623" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>What does one observation represent?</span>
+<span id="cb66-624"><a href="#cb66-624" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>Are variable values stored in column names?</span>
+<span id="cb66-625"><a href="#cb66-625" aria-hidden="true" tabindex="-1"></a><span class="ss">4.  </span>Does one column contain multiple variables?</span>
+<span id="cb66-626"><a href="#cb66-626" aria-hidden="true" tabindex="-1"></a><span class="ss">5.  </span>Are observations unnecessarily split across multiple tables?</span>
+<span id="cb66-627"><a href="#cb66-627" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-628"><a href="#cb66-628" aria-hidden="true" tabindex="-1"></a><span class="fu">## Optional extension: Widening data</span></span>
+<span id="cb66-629"><a href="#cb66-629" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-630"><a href="#cb66-630" aria-hidden="true" tabindex="-1"></a><span class="in">`pivot_wider()`</span> performs the opposite transformation. It takes values from rows and uses them to create columns.</span>
+<span id="cb66-631"><a href="#cb66-631" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-634"><a href="#cb66-634" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-635"><a href="#cb66-635" aria-hidden="true" tabindex="-1"></a>words_by_gender <span class="ot">&lt;-</span> lotr_tidy <span class="sc">|&gt;</span></span>
+<span id="cb66-636"><a href="#cb66-636" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(film, gender) <span class="sc">|&gt;</span></span>
+<span id="cb66-637"><a href="#cb66-637" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb66-638"><a href="#cb66-638" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_words =</span> <span class="fu">sum</span>(words),</span>
+<span id="cb66-639"><a href="#cb66-639" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb66-640"><a href="#cb66-640" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-641"><a href="#cb66-641" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-642"><a href="#cb66-642" aria-hidden="true" tabindex="-1"></a>words_by_gender <span class="sc">|&gt;</span></span>
+<span id="cb66-643"><a href="#cb66-643" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
+<span id="cb66-644"><a href="#cb66-644" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_from =</span> gender,</span>
+<span id="cb66-645"><a href="#cb66-645" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_from =</span> total_words</span>
+<span id="cb66-646"><a href="#cb66-646" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-647"><a href="#cb66-647" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-648"><a href="#cb66-648" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-649"><a href="#cb66-649" aria-hidden="true" tabindex="-1"></a>Wide data are not inherently bad. They can be convenient for presentation, data entry, or matrix operations. Long tidy data are generally easier to transform, summarize, and visualize with tidyverse tools.</span>
+<span id="cb66-650"><a href="#cb66-650" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-651"><a href="#cb66-651" aria-hidden="true" tabindex="-1"></a><span class="fu">## Optional extension: Add readable age labels</span></span>
+<span id="cb66-652"><a href="#cb66-652" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-655"><a href="#cb66-655" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb66-656"><a href="#cb66-656" aria-hidden="true" tabindex="-1"></a>tb_tidy <span class="sc">|&gt;</span></span>
+<span id="cb66-657"><a href="#cb66-657" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb66-658"><a href="#cb66-658" aria-hidden="true" tabindex="-1"></a>    <span class="at">age =</span> <span class="fu">recode</span>(</span>
+<span id="cb66-659"><a href="#cb66-659" aria-hidden="true" tabindex="-1"></a>      age,</span>
+<span id="cb66-660"><a href="#cb66-660" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">04</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"0–4"</span>,</span>
+<span id="cb66-661"><a href="#cb66-661" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">514</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"5–14"</span>,</span>
+<span id="cb66-662"><a href="#cb66-662" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">014</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"0–14"</span>,</span>
+<span id="cb66-663"><a href="#cb66-663" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">1524</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"15–24"</span>,</span>
+<span id="cb66-664"><a href="#cb66-664" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">2534</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"25–34"</span>,</span>
+<span id="cb66-665"><a href="#cb66-665" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">3544</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"35–44"</span>,</span>
+<span id="cb66-666"><a href="#cb66-666" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">4554</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"45–54"</span>,</span>
+<span id="cb66-667"><a href="#cb66-667" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">5564</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"55–64"</span>,</span>
+<span id="cb66-668"><a href="#cb66-668" aria-hidden="true" tabindex="-1"></a>      <span class="st">`</span><span class="at">65</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"65+"</span>,</span>
+<span id="cb66-669"><a href="#cb66-669" aria-hidden="true" tabindex="-1"></a>      <span class="at">u =</span> <span class="st">"unknown"</span></span>
+<span id="cb66-670"><a href="#cb66-670" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb66-671"><a href="#cb66-671" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb66-672"><a href="#cb66-672" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb66-673"><a href="#cb66-673" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-674"><a href="#cb66-674" aria-hidden="true" tabindex="-1"></a><span class="fu">## Resources and attribution</span></span>
+<span id="cb66-675"><a href="#cb66-675" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-676"><a href="#cb66-676" aria-hidden="true" tabindex="-1"></a>This tutorial adapts concepts and examples from:</span>
+<span id="cb66-677"><a href="#cb66-677" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-678"><a href="#cb66-678" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">R for Data Science (2e): Data tidying</span><span class="co">](https://r4ds.hadley.nz/data-tidy.html)</span></span>
+<span id="cb66-679"><a href="#cb66-679" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">R for Data Science (2e): Data import</span><span class="co">](https://r4ds.hadley.nz/data-import.html)</span></span>
+<span id="cb66-680"><a href="#cb66-680" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">tidyr: Tidy data vignette</span><span class="co">](https://tidyr.tidyverse.org/articles/tidy-data.html)</span></span>
+<span id="cb66-681"><a href="#cb66-681" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">Jenny Bryan's Lord of the Rings tidy-data lesson</span><span class="co">](https://github.com/jennybc/lotr-tidy)</span></span>
+<span id="cb66-682"><a href="#cb66-682" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-683"><a href="#cb66-683" aria-hidden="true" tabindex="-1"></a>The Lord of the Rings data files are redistributed from Jenny Bryan's public teaching repository. The tuberculosis file is redistributed from the tidyr vignette repository.</span>
+</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

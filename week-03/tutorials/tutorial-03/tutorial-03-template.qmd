@@ -1,0 +1,660 @@
+---
+title: "Importing and Tidying Data with the Tidyverse"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: false
+    code-tools: true
+execute:
+  warning: false
+  message: false
+editor: source
+---
+
+## Learning goals
+
+By the end of this tutorial, you should be able to:
+
+1.  import a CSV file with `readr::read_csv()`;
+2.  inspect an imported dataset with `glimpse()`;
+3.  identify the observational unit of a dataset;
+4.  explain the three rules of tidy data;
+5.  use `pivot_longer()` to reshape data; and
+6.  recognize when column names encode multiple variables.
+
+## Setup
+
+The tutorial files are organized in a folder like this:
+
+``` text
+tutorial-03/
+├── tutorial-03-template.qmd
+└── data/
+    ├── stock-biomass-wide.csv
+    ├── The_Fellowship_Of_The_Ring.csv
+    ├── The_Two_Towers.csv
+    ├── The_Return_Of_The_King.csv
+    └── tb.csv
+```
+
+Run this once if the tidyverse is not installed:
+
+```{r}
+#| eval: false
+pak::pak("tidyverse")
+```
+
+Load the tidyverse and the here packages at the beginning of the session.
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(here)
+```
+
+::: callout-note
+## Today's workflow
+
+**Import → Inspect → Identify observations → Tidy → Check**
+:::
+
+## Part 1: Import and inspect data {#sec-import}
+
+A CSV is a plain-text file in which columns are separated by commas. We use `read_csv()` to import the `stock-biomass-wide` dataframe and assign the result to an object.
+
+```{r}
+
+? read_csv()
+
+? names()
+
+biomass_wide <- read_csv(
+	here(
+		"week-03",
+		"tutorials",
+		"tutorial-03",
+		"data",
+		"stock-biomass-wide.csv"),
+  na = c("", "NA", ".")
+)
+
+biomass_wide
+```
+
+The first argument to `read_csv()` gives the **path** to the file. With the `{here}` package, we list all folders after the root folder (here, `course-hub/`).
+
+The second argument is the `na` argument, which identifies entries that should be treated as missing values. In this file, a period (`.`) means that no value was reported. Usually, a cell is left blank if no value is reported.
+
+### Inspect the imported data
+
+Never assume that a file imported exactly as intended. Inspect it before continuing.
+
+```{r}
+glimpse(biomass_wide)
+```
+
+```{r}
+names(biomass_wide)
+```
+
+`glimpse()` is from the `{dplyr}` package and this function lets you see the structure of your dataframe, showing you the number of rows and columns, variable names, variable types, and example values. `names()` is a base-R function that prints the names of all columns. 
+
+Reminder of data/variable types:
+
+| Abbreviation | Type                       |
+|--------------|----------------------------|
+| `<chr>`      | character text             |
+| `<dbl>`      | numeric value              |
+| `<int>`      | integer                    |
+| `<lgl>`      | logical: `TRUE` or `FALSE` |
+| `<date>`     | calendar date              |
+
+::: callout-note
+## Pause and discuss
+
+1.  What does one row currently represent? biomass of a fish species in that region
+2.  Are `2021`, `2022`, `2023`, and `2024` variables or values? variables
+3.  What measured variable is spread across those columns?
+:::
+
+## Part 2: Tidy the biomass data {#sec-biomass}
+
+A dataset is tidy when:
+
+1.  each variable is a column;
+2.  each observation is a row; and
+3.  each value is a cell.
+
+In `biomass_wide`, years are stored as column names. Biomass is spread across several columns even though it is one measured variable.
+
+The observational unit we want is:
+
+> One stock observed in one year.
+
+A tidy version should contain the variables:
+
+- `region`
+- `stock`
+- `year`
+- `biomass_t`
+
+### Lengthen the data
+
+Use `pivot_longer()` when information that belongs in rows is spread across columns.
+
+First, look at the documentation for `pivot_longer()`. You see the description, usage, and examples. What are some of the listed arguments?
+
+```{r}
+? pivot_longer()
+```
+
+Now let's use `pivot_longer()` to **reshape** the `biomass_wide` dataframe. We will want to provide which columns we want to pivot into longer format (`cols = `) the name of the new column that will contain the original column names (`names_to = "year"`), and the name of the new column that will contain their values (`values_to = "biomass_t"`).
+
+We will also start using the pipe `|>` operator, which takes the result on its left and passes it into the function on its right. We will learn more about the pipes next week in the data wrangling tutorial. Pipes have made coding simpler and easier to read. In the below example, we take the `biomass_wide` dataframe, pipe (or pass) it into the function `pivot_longer()`. 
+
+```{r}
+biomass_long <- biomass_wide |>
+  pivot_longer(
+    cols = starts_with("20"),
+    names_to = "year",
+    values_to = "biomass_t"
+  )
+
+biomass_long
+```
+
+Read the arguments as a sentence:
+
+> Take the columns whose names start with `20`, put their names into a new variable called `year`, and put their cell values into a new variable called `biomass_t`.
+
+Compare the original and reshaped datasets.
+
+```{r}
+biomass_wide
+```
+
+```{r}
+biomass_long
+```
+
+What do you notice?
+
+### Check the result
+
+```{r}
+glimpse(biomass_long)
+```
+
+What needs fixing? hint: look at the `year` variable type. 
+
+<details>
+<summary>Click to show the answer and how to fix it</summary>
+
+`year` is character text because it came from column names. Convert it to an integer.
+
+`parse_integer()` converts character values to whole-number integers and reports values that cannot be parsed correctly. You can also use `as.numeric()`, which would convert them to numeric double values.
+
+```{r}
+biomass_long <- biomass_long |>
+  mutate(year = parse_integer(year))
+
+glimpse(biomass_long)
+```
+
+
+Now one row represents one stock observed in one year.
+</details> 
+
+### Your turn
+
+Complete the code so the year columns become a variable named `survey_year` and their values become a variable named `biomass`.
+
+```r
+biomass_wide |>
+  pivot_longer(
+    cols = starts_with("20"),
+    names_to = "survey_year",
+    values_to = "biomass"
+  )
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+biomass_wide |>
+  pivot_longer(
+    cols = starts_with("20"),
+    names_to = "survey_year",
+    values_to = "biomass"
+  )
+```
+:::
+
+## Part 3: Observations stored in multiple tables {#sec-lotr}
+
+The Lord of the Rings data record the number of words spoken by characters of different races and genders in each film. The observations are split among three files—one file per film.
+
+What is the file path one would need to use to import these files if they are in the data subfolder of the tutorials subfolder of week-03? 
+
+```r
+	file_path <- here(
+		"week-03",
+		"tutorials",
+		"tutorial-03",
+		"data",
+		"The_Fellowship_Of_The_Ring.csv"
+)
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+	data_file_path <- here(
+		"week-03",
+		"tutorials",
+		"tutorial-03",
+		"data")
+```
+:::
+
+Make sure you run the above code because you will use the `data_file_path` object below with the `file.path` function. 
+
+The `file.path` function constructs a path to a file.
+
+```{r}
+
+? file.path()
+
+LOTR_file_path <- file.path(data_file_path, "The_Fellowship_Of_The_Ring.csv")
+
+LOTR_file_path
+```
+
+Now that you know about creating file paths, let's read in out datasets. Because we have more than one dataset file, we won't use the above code (`LOTR_file_path`). We will use `file.path` and `data_file_path` in the `read_csv` function. `read_csv` normally prints out a lot of information inferred from the file. You can use the `show_col_types = FALSE` argument to prevent this. 
+
+### Import the three files
+
+```{r}
+fellowship <- read_csv(
+	file.path(data_file_path,
+	"The_Fellowship_Of_The_Ring.csv"),
+  show_col_types = FALSE
+)
+
+two_towers <- read_csv(
+	file.path(data_file_path,
+  "The_Two_Towers.csv"),
+  show_col_types = FALSE
+)
+
+return_king <- read_csv(
+	file.path(data_file_path,
+  "The_Return_Of_The_King.csv"),
+  show_col_types = FALSE
+)
+```
+
+Inspect one of the datasets:
+
+```{r}
+glimpse(fellowship)
+```
+
+
+See if the datasets contain the same information:
+
+```{r}
+
+names(fellowship)
+names(two_towers)
+names(return_king)
+
+```
+
+
+Each file contains the same variables but different observations. Stack them with `bind_rows()`. `bind_rows()` is a `tidyverse` (actually `{dplyr}`) function that binds any number of data frames together by row (i.e., stack them). The output will contain all columns that appear in any of the inputs. (There is also a function `bind_cols`).
+
+Here, we combine the three dataframes together and then pipe the output into another function, `rename_with` to convert all column names to lowercase (using `str_to_lower`). 
+
+```{r}
+lotr_wide <- bind_rows(
+  	fellowship,
+  	two_towers,
+  	return_king) |>
+  rename_with(str_to_lower)
+
+lotr_wide
+```
+
+`bind_rows()` is appropriate because the tables have the same columns and each contains additional rows of the same kind of observation.
+
+::: callout-warning
+## `bind_rows()` is not a join
+
+Use `bind_rows()` to stack similar observations vertically. Use a join (e.g., `left_join()` [which we will learn about later]) when separate tables contain different variables that must be matched using an identifier.
+:::
+
+### Tidy the gender columns
+
+The columns `female` and `male` do not represent two different measured variables. They contain values of the variable `gender`. Their cells contain values of the variable `words`.
+
+```{r}
+lotr_tidy <- lotr_wide |>
+  pivot_longer(
+    cols = c(female, male),
+    names_to = "gender",
+    values_to = "words"
+  )
+
+lotr_tidy
+```
+
+## Pause and discuss
+Before the pivot: One row represents a unique combination of film and race, with the word counts for female and male characters stored in separate columns.
+
+After the pivot: One row represents a unique combination of film, race, and gender, with the corresponding word count stored in the `words` column.
+
+### Use the tidy data
+
+To illustrate how useful tidy data is for working with the `{tidyverse}` packages, we will produce a summary of the number of words spoken by males and females. `group_by` is a function that groups a dataframe by the specified variable(s) so operations can be performed on a per-group basis. `summarize` (or `summarise` as the package developer is British) creates a new data frame that returns one row for each combination of grouping variables. If no grouping variables, the output will have a single row summarizing all observations in the input. Below, we use `group_by` and `summarize` to create a new column `total_words`.
+
+```{r}
+lotr_tidy |>
+  group_by(gender) |>
+  summarize(
+    total_words = sum(words),
+    .groups = "drop"
+  )
+```
+
+## Part 4: Multiple variables encoded in column names {#sec-tb}
+
+The tuberculosis dataset records confirmed cases by country, year, sex, and age group.
+
+```{r}
+tb <- read_csv(
+	file.path(
+		data_file_path,
+  	"tb.csv"),
+  show_col_types = FALSE
+)
+
+tb
+```
+
+Inspect the column names.
+
+```{r}
+names(tb)
+```
+
+A name such as `m1524` contains two values:
+
+``` text
+m1524
+|  |
+|  └─ age group: 15–24
+└──── gender: male
+```
+
+The column name is therefore a combination of two underlying variables: `gender` and `age`.
+
+### Step 1: Pivot the case columns longer
+
+Use similar code as before to reshape the data frame. `values_drop_na = TRUE` removes rows created by `pivot_longer()` when the value places in the cases column is `NA`. Without it, the long data would include combinations of country, year, and demographic group with missing case counts.
+
+```{r}
+
+tb_long <- tb |>
+  pivot_longer(
+    cols = -c(iso2, year),
+    names_to = "demographic",
+    values_to = "cases"
+  )
+
+tb_long
+
+tb_long <- tb |>
+  pivot_longer(
+    cols = -c(iso2, year),
+    names_to = "demographic",
+    values_to = "cases",
+    values_drop_na = TRUE
+  )
+
+tb_long
+```
+
+The new `demographic` column is still not tidy because each value combines gender and age.
+
+### Step 2: Separate the encoded variables
+
+The first character of `demographic` indicates `gender`, while the remaining characters contain the age code. We can separate these components using `separate_wider_regex()` from the `{tidyr}` package. This function splits a character column into multiple columns based on regular expression patterns. Regular expressions are patterns used to match specific arrangements of characters within text. Here, `"[mf]"` matches either `"m"` or `"f"`, and `".*"` matches all remaining characters. Related functions can instead split values at delimiters, such as commas, or at fixed character widths. 
+
+```{r}
+tb_tidy <- tb_long |>
+  separate_wider_regex(
+    demographic,
+    patterns = c(
+      gender = "[mf]",
+      age = ".*"
+    )
+  )
+
+tb_tidy
+```
+
+Now each underlying variable has its own column.
+
+### Replace the gender codes
+
+Abbreviations are not always so clear. Avoid if you can. Let's spell out what `m` and `f` mean. 
+
+```{r}
+tb_tidy <- tb_tidy |>
+  mutate(
+    gender = recode(
+      gender,
+      m = "male",
+      f = "female"
+    )
+  )
+
+tb_tidy
+```
+
+::: callout-note
+## Observational unit
+
+After tidying, one row represents the reported number of cases for one country, year, gender, and age group.
+:::
+
+The age codes can also be converted to readable labels. 
+```{r}
+tb_tidy <- tb_tidy |>
+  mutate(
+    age = factor(
+      age,
+      levels = c("014", "1524", "2534", "3544", "4554", "5564", "65"),
+      labels = c("0–14", "15–24", "25–34", "35–44",
+                 "45–54", "55–64", "65+"),
+      ordered = TRUE
+    )
+  )
+
+glimpse(tb_tidy)
+```
+
+
+## Part 5: Creating data frames in R
+
+Sometimes, you will want to create a dataframe in R. This is not too common, as it is only for small datasets. Most data you will work with will be in a .csv or other file and imported into R. However, you should still know how to do this.
+
+There are a few useful functions to help you assemble a dataframe “by hand”. In base R (using no packages), you can use `data.frame()`. Tidyverse offers other options: `tibble()` and `tribble()`, short for transposed tibble. `tibble()` works by column and `tribble()` lets you lay out your data row by row.
+
+```{r}
+
+# create the same small dataset in three different ways
+
+# base R: enter data by column
+fish_base <- data.frame(
+  species = c("Atlantic cod", "Haddock", "Pollock"),
+  year = c(2021, 2021, 2021),
+  biomass_t = c(1200, 850, 975)
+)
+
+# tidyverse: enter data by column
+fish_tibble <- tibble(
+  species = c("Atlantic cod", "Haddock", "Pollock"),
+  year = c(2021, 2021, 2021),
+  biomass_t = c(1200, 850, 975)
+)
+
+# tidyverse: enter data row by row
+fish_tribble <- tribble(
+  ~species,        ~year, ~biomass_t,
+  "Atlantic cod",   2021,       1200,
+  "Haddock",        2021,        850,
+  "Pollock",        2021,        975
+)
+
+fish_base
+fish_tibble
+fish_tribble
+
+```
+
+
+How do these different ways compare? Let's use `str()`, which compactly displays the structre of an object. `glimpse()` is not as good for this because it doesn't tell us the class of the object (but it is useful in other ways!).
+
+```{r}
+
+str(fish_base)
+str(fish_tibble)
+str(fish_tribble)
+```
+
+What do you notice?
+
+
+## Part 6: Exporting data frames {#sec-tb}
+
+Use `write_csv()` from the `{readr}` package to save a data frame as a CSV file. The first argument is the data frame to save, and the second is the file path and filename. Unlike base R’s `write.csv()`, `write_csv()` does not add row names as an extra column. You often import raw data into R and manipulate it, creating 'generated data'. You then save this, e.g., using `write_csv()`. 
+
+```{r}
+# create a path for the output file
+output_file <- file.path(
+  data_file_path,
+  "data_generated",
+  "lotr_tidy.csv"
+)
+
+# save the tidy data as a CSV file
+write_csv(
+  lotr_tidy,
+  output_file
+)
+
+# check that the file exists
+file.exists(output_file)
+
+```
+
+
+## Recap {#sec-recap}
+
+### Import and inspect
+
+```{r}
+#| eval: false
+data <- read_csv(
+	here("insert-file-path",
+			 "file.csv"))
+glimpse(data)
+```
+
+### Stack tables containing the same variables
+
+```{r}
+#| eval: false
+combined <- bind_rows(table1, table2)
+```
+
+### Move column names into rows
+
+```{r}
+#| eval: false
+data_long <- data |>
+  pivot_longer(
+    cols = columns_to_pivot,
+    names_to = "new_variable",
+    values_to = "measured_value"
+  )
+```
+
+### Split an encoded column into variables
+
+```{r}
+#| eval: false
+data_tidy <- data_long |>
+  separate_wider_regex(
+    combined_variable,
+    patterns = c(
+      variable_1 = "pattern_1",
+      variable_2 = "pattern_2"
+    )
+  )
+```
+
+### Which function would you use?
+
+| Situation                               | Function                 |
+|-----------------------------------------|--------------------------|
+| Read a CSV file                         | `read_csv()`             |
+| Inspect column types                    | `glimpse()`              |
+| Stack the same kinds of observations    | `bind_rows()`            |
+| Move column names into rows             | `pivot_longer()`         |
+| Split one encoded column into variables | `separate_wider_regex()` |
+
+### Questions to ask before tidying
+
+1.  What are the variables?
+2.  What does one observation represent?
+3.  Are variable values stored in column names?
+4.  Does one column contain multiple variables?
+5.  Are observations unnecessarily split across multiple tables?
+
+## Optional extension: Widening data
+
+`pivot_wider()` performs the opposite transformation. It takes values from rows and uses them to create columns.
+
+```{r}
+words_by_gender <- lotr_tidy |>
+  group_by(film, gender) |>
+  summarize(
+    total_words = sum(words),
+    .groups = "drop"
+  )
+
+words_by_gender |>
+  pivot_wider(
+    names_from = gender,
+    values_from = total_words
+  )
+```
+
+Wide data are not inherently bad. They can be convenient for presentation, data entry, or matrix operations. Long tidy data are generally easier to transform, summarize, and visualize with tidyverse tools.
+
+## Resources and attribution
+
+This tutorial adapts concepts and examples from:
+
+- [R for Data Science (2e): Data tidying](https://r4ds.hadley.nz/data-tidy.html)
+- [R for Data Science (2e): Data import](https://r4ds.hadley.nz/data-import.html)
+- [tidyr: Tidy data vignette](https://tidyr.tidyverse.org/articles/tidy-data.html)
+- [Jenny Bryan's Lord of the Rings tidy-data lesson](https://github.com/jennybc/lotr-tidy)
+
+The Lord of the Rings data files are redistributed from Jenny Bryan's public teaching repository. The tuberculosis file is redistributed from the tidyr vignette repository.
