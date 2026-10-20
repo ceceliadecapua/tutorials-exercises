@@ -1,0 +1,998 @@
+---
+title: "Linear regression in R"
+subtitle: "Relationships, predictions, diagnostics, and multiple regression"
+author: "Skill Building in R"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    code-copy: true
+    theme: cosmo
+execute:
+  echo: true
+  warning: true
+  message: false
+---
+
+## Learning outcomes
+
+By the end, you should be able to:
+
+- Identify the observational unit, response, and predictor for a research question.
+- Fit a simple linear regression model and interpret coefficients.
+- Distinguish observed values, fitted values, and residuals.
+- Use `tidy()`, `glance()`, and `augment()` to answer different questions about a model.
+- Generate predictions and recognize extrapolation.
+- Interpret diagnostic plots and explain what those plots cannot establish.
+- Interpret a regression with one numeric predictor and one categorical predictor.
+- Fit a multiple regression with one categorical and one numeric predictor, interpret model, and plot predictions using `predict()`.
+
+## Set up
+
+Install these packages by running the following code:
+
+```{r}
+#| eval: false
+install.packages(c("tidyverse", "broom", "palmerpenguins"))
+```
+
+## 1. Question, data, and missing values
+
+**Question:** How does mean flipper length vary with body mass?
+
+For this analysis, we will focus on one species to avoid mixing differences among species with relationships within a species. These are observational measurements, so our analysis describes association. It does not show that changing body mass would change flipper length.
+
+The `penguins` dataset contains measurements collected by Dr. Kristen Gorman and the Palmer Station LTER program in Antarctica during 2007–2009. Each row represents a sampled penguin.
+
+Load packages, set a theme, and check out the data. `theme_set()` is new; this code sets one theme for all figures in a given script.
+
+```{r}
+library(tidyverse)
+library(broom)
+library(palmerpenguins)
+
+theme_set(theme_bw(base_size = 12))
+
+glimpse(penguins)
+```
+
+First, we will filter out the data for Adelie penguins only. We also want to see whether we have missing data and how much. For this analysis, we will remove rows with missing values in the response or predictor because an `lm()` workflow uses complete values for the model variables. We will remove missing values only for the variables we will use for our model. Removing rows (observations) can affect which population our results represent and it is important to document this.
+
+```{r}
+adelie_raw <- penguins |>
+  filter(species == "Adelie")
+
+adelie_raw |>
+  summarize(
+    n_rows = n(),
+    missing_mass = sum(is.na(body_mass_g)),
+    missing_flipper = sum(is.na(flipper_length_mm))
+  )
+
+adelie <- adelie_raw |>
+  drop_na(flipper_length_mm, body_mass_g)
+
+nrow(adelie)
+```
+
+## 2. Explore the association
+
+Look at the data before fitting a model. Describe direction, shape, spread, and unusual observations.
+
+```{r}
+ggplot(
+  data = adelie,
+  mapping = aes(x = body_mass_g, y = flipper_length_mm)
+) +
+  geom_point(alpha = 0.7) +
+  labs(
+    x = "Body mass (g)",
+    y = "Flipper length (mm)",
+    title = "Flipper length and body mass among Adélie penguins"
+  )
+
+adelie |>
+  summarize(
+    n_penguins = n(),
+    min_mass_g = min(body_mass_g),
+    max_mass_g = max(body_mass_g),
+    mean_flipper_mm = mean(flipper_length_mm),
+    correlation = cor(body_mass_g, flipper_length_mm)
+  )
+```
+
+**Discussion questions:**
+
+1.  Do you expect a positive or negative slope? Why?
+
+2.  Do you expect a strong or weak correlation ? Why?
+
+3.  If we converted body mass to kilograms, would the slope value change? Would the correlation value change?
+
+## 3. Fit and interpret the model
+
+The model separates a mean relationship from variation around it:
+
+$$
+Y_i = \beta_0 + \beta_1 X_i + \varepsilon_i.
+$$
+
+We use the `lm()` function to fit a simple linear regression (also called 'Ordinary Least Squares Regression\`, OLS). Our model estimates the intercept and slope - called coefficients. OLS chooses the coefficients that minimize the sum of squared residuals (remember from lecture?). Squaring prevents positive and negative residuals from canceling and gives larger deviations more weight. Read `flipper_length_mm ~ body_mass_g` as “model flipper length using body mass.” `lm()` includes an intercept by default.
+
+```{r}
+
+flipper_model <- lm(
+  flipper_length_mm ~ body_mass_g,
+  data = adelie
+)
+
+summary(flipper_model)
+```
+
+Our `summary()` gives us our model results. First, the `Call:` tells us the formula of our model. From this, we know that the fitted-line equation is:
+
+$$
+\widehat{\text{flipper length}} = \hat\beta_0 + \hat\beta_1\times\text{body mass}.
+$$
+
+We then see `Residuals:`, which summarizes the differences between observed and predicted responses using the minimum, quartiles, median, and maximum. For example, the minimum residual, −14.28 mm, represents a penguin whose flipper was approximately 14.28 mm shorter than predicted. Here, we look for a median near zero and roughly balanced negative and positive residuals. The first and third quartiles describe the middle 50% of residuals; similar distances from zero suggest approximate symmetry. The minimum and maximum show the most extreme prediction errors and may flag observations worth investigating.
+
+Next, we see `Coefficients:`, which reports the estimated intercept and slope (Estimate), the estimated uncertainty in that coefficient (Std. Error), the estimate divided by its standard error (t value), and the p-value for testing whether the population coefficient equals zero (Pr(\>\|t\|). R always prints `(Intercept)` for the intercept. Here, this can be interpreted as the predicted mean flipper length at a body mass of 0 g. Our intercept value is 165.2, which means the predicted mean flipper length for an Adelie penguin that weighs 0g is 165.2 mm. This doesn't make too much sense since a penguin won't weigh 0g, and this is why we center, scale, or standardize our predictor data (more on this later). The slope is `body_mass_g` and R prints `body_mass_g` and not `slope` because a model with multiple predictors will each have a slope. So the `` body_mass_g` ``coefficient is the slope of body mass. Here, this is the difference in predicted mean flipper length, in millimeters, associated with a 1 g increase in body mass. Our slope value is 0.007, which means that each additional gram of body mass is associated with a 0.006677 mmincrease in predicted mean flipper length.
+
+We can use the `summary()` function, which is the base-R function to view model output. Or, we can use the {tidyverse} packages, which will offer a cleaner approach. Below, `flipper_model` is the model object and `tidy()` extracts a coefficient table from it.
+
+```{r}
+tidy(flipper_model)
+```
+
+### What does the model capture?
+
+```{r}
+
+glance(flipper_model) |>
+  select(nobs, r.squared, sigma)
+```
+
+- `nobs`: Number of observations used.
+- `r.squared`: Proportion of the observed variation in flipper length accounted for by this fitted model, relative to a model that predicts the overall mean.
+- `sigma`: Estimated error standard deviation, in millimeters. It describes the scale of variation around the line, not the standard error of the slope.
+
+An $R^2$ of 0.22 means approximately 22% of the variation in the observed flipper lengths is accounted for by the model. It does not mean predictions are “22% accurate,” and it does not establish causation or accuracy on new data.
+
+## 4. Fitted and predicted values and plots
+
+The next step is to plot the relationship. We are going to plot the fitted values first, which are the values of y (flipper length) at our existing values of x (body mass).
+
+```{r}
+fitted_values <- predict(flipper_model)
+```
+
+The `predict()` function above just used the fitted-line equation, y = 165.2 + 0.007 \* x to estimate a new vector of values. This allows us to plot a best fit line through our data points but doesn't tell us anything about the variability around that line. To create this, I add the fitted values back to the dataset and plot.
+
+```{r}
+adelie$fitted <- fitted_values
+
+ggplot(data = adelie, aes(x = body_mass_g, y = flipper_length_mm)) +
+	geom_point() +
+	geom_line(aes(x = body_mass_g, y = fitted))
+```
+
+We will use the `augment`in the {broom} package (part of tidyverse) to more easily estimate fitted values (and later, predictions). `interval = "confidence"` results in calculation of the upper and lower confidence intervals (). You can specify what confidence level you want (most common is 95%). Here, we are still using the x values in the dataset (observed flipper length).
+
+```{r}
+prediction_data <- augment(
+  flipper_model,
+  interval = "confidence",
+  conf.level = 0.95
+)
+
+head(prediction_data)
+```
+
+`.fitted` is the predicted mean response at the observation's predictor value.
+
+`.lower` is the lower confidence limit for the predicted mean response at the observation’s predictor value.
+
+`.upper` is the upper confidence limit for the predicted mean response at the observation’s predictor value.
+
+`.resid` is observed minus predicted, in the response's units.
+
+We will now make a plot with the fitted line (in blue) and shaded confidence intervals (using `geom_ribbon()`). Remember that `ggplot()` uses layers and we want to add layers in an order that makes the most sense. We add the ribbon first so it is in the background, then points, then the fitted line.
+
+```{r}
+ggplot(
+  data = adelie,
+  mapping = aes(x = body_mass_g, y = flipper_length_mm)
+) +
+  geom_ribbon(
+    data = prediction_data,
+    mapping = aes(
+      x = body_mass_g,
+      ymin = .lower,
+      ymax = .upper
+    ),
+    inherit.aes = FALSE,
+    fill = "steelblue",
+    alpha = 0.2
+  ) +
+  geom_point(alpha = 0.7) +
+  geom_line(
+    data = prediction_data,
+    mapping = aes(y = .fitted),
+    color = "steelblue",
+    linewidth = 1
+  ) +
+  labs(
+    x = "Body mass (g)",
+    y = "Flipper length (mm)"
+  )
+```
+
+Importantly, the above code calculates the fitted values. Predicted values are similar, but are y values (flipper length) for new values of x (within the range of observed values). Let's calculate and plot predictions. The first step is to generate new x values. To do this, we create a new set of x values (body mass) as a data framethat we will supply to the `augment()` function. You can also do this with `predict()`.
+
+```{r}
+
+new_x <- tibble(
+  body_mass_g = seq(
+    min(adelie$body_mass_g),
+    max(adelie$body_mass_g),
+    length.out = 100
+  )
+)
+
+prediction_data <- augment(
+      flipper_model,
+      newdata = new_x,
+      interval = "confidence",
+  		conf.level = 0.95
+    )
+
+head(prediction_data)
+
+ggplot(
+  data = adelie,
+  mapping = aes(x = body_mass_g, y = flipper_length_mm)
+) +
+  geom_ribbon(
+    data = prediction_data,
+    mapping = aes(
+      x = body_mass_g,
+      ymin = .lower,
+      ymax = .upper
+    ),
+    inherit.aes = FALSE,
+    fill = "steelblue",
+    alpha = 0.2
+  ) +
+  geom_point(alpha = 0.7) +
+  geom_line(
+    data = prediction_data,
+    mapping = aes(y = .fitted),
+    color = "steelblue",
+    linewidth = 1
+  ) +
+  labs(
+    x = "Body mass (g)",
+    y = "Flipper length (mm)"
+  )
+```
+
+Note that `augment()` calls the prediction column `.fitted` even when we supply new x values. **Fitted values** are predictions for the observations used to fit the model. Here, we supplied a new sequence of x values, so these are **predictions at those values**. Both use the same fitted equation.
+
+For this straight-line model, either approach gives the same regression line. Using a sequence provides evenly spaced plotting points without duplicate x values. However, when you are fitting GAMs or other more complex models using predicted values instead of fitted values will allow you to draw smooth prediction lines and confidence bands, choose specific values of x that you want to predict for (Check out Figure 2a of \[Wong et al. 2021\](<https://doi.org/10.1098/rspb.2021.0910>), or compare groups at the same x values, such as predicting make and female flipper lengths at identical body masses.
+
+## 5. Model diagnostics
+
+After fitting the model, we examine residuals to check the linear regression assumptions we discussed in lecture. Residual plots help us look for problems, such as a curved relationship or changing spread around the regression line. These checks help us decide whether the model is appropriate for our data and whether we can trust it. These steps are just as important as fitting the model itself - there is not guarantee we can trust the model unless we inspect it!
+
+There is a built-in way to make diagnostic plots: `plot([insert model_object]).`
+
+```{r}
+plot(flipper_model)
+```
+
+This will produce four plots: (1) residuals vs. fitted values, (2) q-q plot, (3) scale-location plot, and (4) residuals vs. leverage. Each has a role in inspecting and diagnosing the model and links to our linear model assumptions (plus some additional checks). We will plot these by hand below to inspect and learn about each plot.
+
+### Linearity and equal variance: residuals versus fitted
+
+This plot tests two assumptions: (1) linearity (the mean response follows a linear relationship with the predictor, and (2) equal variance (variation around the regression line is similar across all predictor values.
+
+For this plot, we plot the residuals against the fitted values:
+
+```{r}
+flipper_results <- augment(
+  flipper_model,
+  data = adelie
+)
+
+ggplot(
+  data = flipper_results,
+  mapping = aes(x = .fitted, y = .resid)
+) +
+  geom_point(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE, color = "steelblue") +
+  labs(x = "Fitted flipper length (mm)", y = "Residual (mm)")
+```
+
+The dashed line marks zero. The curved smoother helps reveal broad patterns; it is a diagnostic aid, not a replacement for the original fitted model. Small wiggles are expected, especially at the edges.
+
+| Pattern to look for | What it suggests |
+|-------------------------------|-----------------------------------------|
+| Residuals scattered around zero without a clear curve | A straight-line mean relationship may be adequate |
+| A systematic curve (i.e., a pattern in the points) | The mean relationship may need a different form or additional predictors |
+| A funnel or changing vertical spread of points | Error variance may change with the fitted response |
+| A few points far from zero | Investigate observations with large residuals |
+
+For a closer look at spread, plot absolute residuals. The distance from zero is now on the y-axis. Plotting these against fitted values helps reveal changes in spread: if absolute residuals tend to increase as fitted values increase, that suggests **unequal variance**.
+
+```{r}
+
+ggplot(
+  data = flipper_results,
+  mapping = aes(x = .fitted, y = abs(.resid))
+) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE, color = "steelblue") +
+  labs(x = "Fitted flipper length (mm)", y = "Absolute residual (mm)")
+```
+
+**Discussion:**
+
+Do you see strong curvature? Is there a clear funnel? Identify one feature of the plot that supports your answer and one uncertainty.
+
+### Normality: a Q–Q plot
+
+A normal Q–Q plot visualizes whether errors are approximately normally distributed by comparing the ordered residuals with the pattern expected from a normal distribution. Here we use standardized residuals, available in `.std.resid`. We want points roughly following the reference line. Systematic departures suggest nonnormality, especially in the tails.
+
+```{r}
+ggplot(
+  data = flipper_results,
+  mapping = aes(sample = .std.resid)
+) +
+  stat_qq(alpha = 0.7) +
+  stat_qq_line(color = "steelblue") +
+  labs(
+    x = "Theoretical normal quantile",
+    y = "Standardized residual quantile"
+  )
+```
+
+- Points roughly following the reference line are consistent with approximate normality.
+- Systematic departures, particularly at the tails, suggest skewness, unusual tails, or unusual observations.
+- A few tail departures do not automatically make the model unusable.
+
+Normality concerns errors **at a given predictor value**, not whether body mass or flipper length itself has a normal marginal distribution. It matters for the usual exact small-sample tests and intervals; `lm()` can calculate a fitted line even when normality is imperfect. Uncertainty procedures may then need reconsideration.
+
+A Q-Q plot can be checked with 'a fat pen test'. If you take a fat pen (marker) and line it up on the diagonal line, do you still see points?
+
+### Scale-location: equal variance
+
+A scale-location plot checks whether error variance is approximately constant across fitted values. Look for a roughly horizontal smooth line and similar spread across fitted values.
+
+```{r}
+ggplot(
+  data = flipper_results,
+  mapping = aes(x = .fitted, y = sqrt(abs(.std.resid)))
+) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(
+    method = "loess",
+    formula = y ~ x,
+    se = FALSE,
+    color = "steelblue"
+  ) +
+  labs(
+    x = "Fitted flipper length (mm)",
+    y = "Square root of absolute standardized residual",
+    title = "Scale–Location"
+  )
+```
+
+### Outliers - Unusual and influential observations
+
+A large residual means an observation is far from the fitted line. **Leverage** describes how unusual its predictor value is. **Influence** describes how much an observation affects the fitted model. These are different ideas.
+
+`augment()` supplies `.hat` (leverage) and `.cooksd` (Cook's distance, an influence measure). We do not need to derive their formulas to inspect the observations they flag.
+
+```{r}
+
+influence_table <- flipper_results |>
+  arrange(desc(.cooksd)) |>
+  select(
+    body_mass_g, flipper_length_mm,
+    .fitted, .resid, .hat, .cooksd
+  )
+
+influence_table |>
+  slice_head(n = 5)
+
+
+ggplot(
+  data = flipper_results,
+  mapping = aes(x = seq_len(nrow(flipper_results)), y = .cooksd)
+) +
+  geom_segment(
+    mapping = aes(
+      xend = seq_len(nrow(flipper_results)),
+      yend = 0
+    ),
+    color = "steelblue"
+  ) +
+  geom_point(alpha = 0.7) +
+  labs(
+    x = "Observation",
+    y = "Cook's distance"
+  )
+```
+
+Common guidelines include:
+
+- **(4/n):** A sensitive threshold for flagging observations to investigate.
+
+- **1:** A rough guideline for potentially strong influence.
+
+- **0.5 and 1:** Contours commonly shown on R’s residuals-versus-leverage plot.
+
+Larger Cook’s distances identify observations that have more influence on the fitted model. Investigate these observations rather than automatically removing them. Start by checking data entry, units, sampling notes, and whether the observation belongs to the population of interest. An unusual valid penguin is still data. **Do not delete points simply to improve diagnostics or obtain a smaller p-value.** A sensitivity analysis can show whether a conclusion depends heavily on one point; any exclusion requires a reason and transparent reporting.
+
+## 6. A categorical predictor
+
+A regression predictor can also be categorical. **Question:** How does mean flipper length differ between sampled female and male Adélie penguins?
+
+We will make a separate dataset so missing sex values are handled explicitly. The two models answer different questions. Let's plot the data:
+
+```{r}
+
+adelie_sex <- adelie_raw |>
+  drop_na(flipper_length_mm, sex) |>
+  mutate(sex = factor(sex, levels = c("female", "male")))
+
+adelie_sex |>
+  group_by(sex) |>
+  summarize(n_penguins = n(), mean_flipper_mm = mean(flipper_length_mm))
+
+ggplot(
+  data = adelie_sex,
+  mapping = aes(x = sex, y = flipper_length_mm)
+) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.12, height = 0, alpha = 0.5) +
+  labs(x = "Sex", y = "Flipper length (mm)")
+
+```
+
+Let's fit the linear model, inspect the output, and generate fitted values.
+
+```{r}
+sex_model <- lm(flipper_length_mm ~ sex, data = adelie_sex)
+
+tidy(sex_model) 
+```
+
+The output for a model with a categorical predictor can look unfamiliar. R prints `(Intercept)` and `sexmale`, even though `sexmale` is not a column in our dataset.
+
+By default, R uses the first factor level (alphabetical unless otherwise specified) as the **reference category**. Here, female is the reference, so `(Intercept)` is the predicted mean flipper length for females. The `sexmale` coefficient is the difference in predicted mean flipper length between males and females. To obtain the predicted male mean, add `(Intercept)` and `sexmale.`Here, `(Intercept)` is the female intercept and `sexmale` is the difference between female and male means. This means:
+
+- The **intercept** is the predicted mean flipper length for females.
+- The **`sexmale` coefficient** is the predicted mean difference, male minus female.
+- The predicted male mean is the intercept plus the `sexmale` coefficient.
+
+We can use augment, which will calculate the predicted mean flipper length for each groups:
+
+```{r}
+augment(sex_model, newdata = tibble(sex = c("female", "male"))) |>
+  select(sex, .fitted)
+
+```
+
+These coefficients describe **differences between group means**, rather than the change in mean flipper length per gram of body mass, as the slope did in the previous model.
+
+```{r}
+plot(sex_model)
+```
+
+Let's inspect the model.
+
+A **residuals-versus-fitted plot** will show two vertical stacks of points. You can compare their spread, but looking for curvature is not useful here: there is no continuous predictor whose relationship needs to be straight.\
+
+A Q-Q plot will look similar and same guidelines: points should roughly follow the reference line.\
+
+For scale-location, make sure the distribution of points is similar in each group (i.e., does one group have points that go higher/lower?).
+
+The leverage plot is less helpful for models with a categorical variable only.
+
+## 7. Multiple regression: models with more than one predictor
+
+**Question:** How does mean flipper length vary with body mass and sex?
+
+Our response is `flipper_length_mm`. We have two predictors:
+
+- `body_mass_g`: numeric, measured in grams.
+- `sex`: categorical, with female as the reference level.
+
+This is **multiple linear regression** because the model contains more than one predictor. We begin with an **additive model**, which assumes the same body-mass slope for both sexes and a constant difference between their predicted means.
+
+### 1. Prepare the data
+
+Remove rows with missing values in any of the three model variables. Explicitly set the reference level so the coefficient interpretations are clear.
+
+```{r}
+adelie_dat <- penguins |>
+  filter(species == "Adelie") |>
+  drop_na(flipper_length_mm, body_mass_g, sex) |>
+  mutate(sex = factor(sex, levels = c("female", "male")))
+
+glimpse(adelie_dat)
+
+adelie_dat |>
+  count(sex)
+```
+
+This model may use a different sample from a model that only required flipper length and body mass. When comparing model coefficients, remember that both the predictors and the included observations can change.
+
+### 2. Preliminary plots
+
+First, examine flipper length and body mass, using color to distinguish the two groups.
+
+```{r}
+ggplot(
+  data = adelie_dat,
+  mapping = aes(
+    x = body_mass_g,
+    y = flipper_length_mm,
+    color = sex
+  )
+) +
+  geom_point(alpha = 0.7) +
+  labs(
+    x = "Body mass (g)",
+    y = "Flipper length (mm)",
+    color = "Sex",
+    title = "Flipper length and body mass by sex"
+  ) +
+  theme_bw()
+```
+
+Next, look at the distribution of each numeric variable by sex.
+
+```{r}
+
+ggplot(
+  data = adelie_dat,
+  mapping = aes(x = sex, y = flipper_length_mm, fill = sex)
+) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.4) +
+  geom_jitter(width = 0.12, height = 0, alpha = 0.5) +
+  labs(x = "Sex", y = "Flipper length (mm)") +
+  guides(fill = "none") +
+  theme_bw()
+
+ggplot(
+  data = adelie_dat,
+  mapping = aes(x = sex, y = body_mass_g, fill = sex)
+) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.4) +
+  geom_jitter(width = 0.12, height = 0, alpha = 0.5) +
+  labs(x = "Sex", y = "Body mass (g)") +
+  guides(fill = "none") +
+  theme_bw()
+
+adelie_dat |>
+  group_by(sex) |>
+  summarize(
+    n_penguins = n(),
+    mean_flipper_mm = mean(flipper_length_mm),
+    mean_mass_g = mean(body_mass_g),
+    min_mass_g = min(body_mass_g),
+    max_mass_g = max(body_mass_g)
+  )
+```
+
+**Discussion:**
+
+1.  Does flipper length appear to differ between the sexes?
+
+2.  Does body mass also appear to differ between the sexes?
+
+3.  At similar body masses, do the groups appear to have similar flipper lengths?
+
+4.  Why might comparing overall group means answer a different question from comparing groups at the same body mass?
+
+### 3. Fit an additive model
+
+```{r}
+
+flipper_model_add <- lm(
+  flipper_length_mm ~ body_mass_g + sex,
+  data = adelie_dat
+)
+
+tidy(flipper_model_add) 
+```
+
+The `+` includes both predictors. It does not fit an interaction.
+
+The fitted equation is:
+
+\[ \widehat{\text{flipper length}} = \hat\beta\_0 + \hat\beta\_1,\text{body mass} + \hat\beta\_2,I(\text{male}). \]
+
+Here, (I(\text{male})) equals 1 for male and 0 for female (known as dummy coding). R creates this indicator internally from the factor; we do not need to create it ourselves. You would for more complicated models or those with more than two categories for a group.
+
+- **Female:** predicted flipper length = intercept + body-mass slope × body mass.
+- **Male:** predicted flipper length = intercept + male coefficient + body-mass slope × body mass.
+
+Both groups have the same slope, so the model produces **parallel lines**. Parallelism is an assumption of this additive specification, not something established by fitting it.
+
+### 4. Interpret the output
+
+| Output term | Interpretation |
+|------------------------------------|------------------------------------|
+| `(Intercept)` | Predicted mean flipper length for a female with body mass 0 g. |
+| `body_mass_g` | Predicted difference in mean flipper length, in millimeters, associated with a 1 g increase in body mass, **holding sex constant**. The model assumes this slope is the same for both sexes. |
+| `sexmale` | Predicted difference in mean flipper length, male minus female, **at the same body mass**. The model assumes this difference is constant across body masses. |
+
+For this dataset, the estimates are approximately:
+
+- **Intercept: 166.46 mm**, the predicted female mean flipper length at 0 g.
+- **Body-mass slope: 0.00633 mm/g**, the predicted increase in mean flipper length per additional gram, holding sex constant.
+- **Male coefficient: 0.344 mm**, the predicted male-minus-female difference at the same body mass. The predicted male mean flipper length at 0 g is thus 166.46 + 0.344 = 166.804 mm
+
+“Holding sex constant” means comparing penguins within the same sex in the fitted model. “At the same body mass” means comparing the two model predictions using one common numeric predictor value. These are model-adjusted associations, not effects established by experimental manipulation.
+
+Our results show that mean flipper length increases with body mass after accounting for sex but there is no statistical difference in the mean flipper length between males and females at the same body mass.
+
+Importantly, we did not ask whether there was a different relationship between body mass and flipper length for males and females. This would entail fitting an interaction between body mass and sex (we will do this later).
+
+### 5. Plot predictions from the fitted model
+
+Next we calculate fitted values (predictions) at a sequence of body masses for each sex. Create a separate sequence within each sex’s observed body-mass range. `reframe()` creates a new data frame and allows each group to return any number of rows.
+
+```{r}
+
+prediction_grid <- adelie_dat |>
+  group_by(sex) |>
+  reframe(
+    body_mass_g = seq(
+      min(body_mass_g),
+      max(body_mass_g),
+      length.out = 100
+    )
+  )
+
+prediction_grid <- prediction_grid |>
+  mutate(
+    predicted_flipper_mm = as.numeric(
+      predict(flipper_model_add, newdata = prediction_grid)
+    )
+  )
+
+head(prediction_grid)
+```
+
+Now plot.
+
+```{r}
+ggplot(
+  data = adelie_dat,
+  mapping = aes(x = body_mass_g, y = flipper_length_mm, color = sex)
+) +
+  geom_point(alpha = 0.5) +
+  geom_line(
+    data = prediction_grid,
+    mapping = aes(y = predicted_flipper_mm, group = sex),
+    linewidth = 1.1
+  ) +
+  labs(
+    x = "Body mass (g)",
+    y = "Flipper length (mm)",
+    color = "Sex",
+    title = "Predicted flipper length from the two-predictor model",
+    subtitle = "Lines span each group's observed body-mass range"
+  ) +
+  theme_bw()
+```
+
+`group = sex` tells `geom_line()` to draw a separate line for each sex. Although `color = sex` also groups the lines, we include `group = sex` to make this explicit.
+
+We use `predict()` to plot predictions from our additive model, which assumes the **same slope for both sexes**. Using `geom_smooth(method = "lm")` with `color = sex` would instead fit a separate regression for each sex, allowing different slopes.
+
+The lines are parallel because the additive model assumes the **same body-mass slope for both sexes**. The **`sexmale` coefficient** describes the vertical distance between the lines: the predicted male-minus-female difference at the same body mass.
+
+### Add confidence bands to the predicted means
+
+```{r}
+
+preds <- predict(
+  flipper_model_add,
+  newdata = prediction_grid,
+  interval = "confidence",
+  level = 0.95
+) |>
+  as_tibble()
+
+prediction_bands <- bind_cols(prediction_grid, preds)
+
+ggplot(
+  data = adelie_dat,
+  mapping = aes(x = body_mass_g, y = flipper_length_mm, color = sex)
+) +
+  geom_ribbon(
+    data = prediction_bands,
+    mapping = aes(
+      x = body_mass_g, ymin = lwr, ymax = upr,
+      fill = sex, group = sex
+    ),
+    inherit.aes = FALSE,
+    alpha = 0.18
+  ) +
+  geom_point(alpha = 0.5) +
+  geom_line(
+    data = prediction_bands,
+    mapping = aes(y = fit, group = sex),
+    linewidth = 1.1
+  ) +
+  labs(
+    x = "Body mass (g)", y = "Flipper length (mm)",
+    color = "Sex", fill = "Sex",
+    title = "Predicted means with 95% pointwise confidence intervals"
+  ) +
+  theme_bw()
+```
+
+`predict(..., interval = "confidence")` returns `fit`, `lwr`, and `upr`. These bands describe uncertainty in the predicted **mean**, under the model assumptions. They are not prediction intervals for individual penguins and are not simultaneous confidence bands for the whole curve.
+
+### 6. Diagnostics
+
+```{r}
+plot(flipper_model_add)
+```
+
+**`plot(flipper_model_add)` checks the entire model, including body mass and sex.** It does not plot each predictor separately.
+
+The fitted values on the x-axis are calculated using **both predictors**. They appear continuous because body mass varies continuously.
+
+The default diagnostic plots do **not distinguish observations by sex**, so group-specific patterns may be harder to see. Coloring residual plots by sex, as we did with `ggplot()`, helps reveal those patterns.
+
+```{r}
+add_results <- augment(flipper_model_add, data = adelie_dat)
+```
+
+#### **Residuals versus fitted values**
+
+```{r}
+ggplot(
+  data = add_results,
+  mapping = aes(x = .fitted, y = .resid, color = sex)
+) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Fitted flipper length (mm)", y = "Residual (mm)", color = "Sex") +
+  theme_bw()
+```
+
+This checks whether residuals show a pattern across the model’s predicted flipper lengths.
+
+- A curved pattern suggests the model misses part of the mean relationship.
+
+- Changing vertical spread suggests unequal variance.
+
+- Colors help reveal whether patterns differ by sex.
+
+#### Residuals versus body mass
+
+```{r}
+ggplot(
+  data = add_results,
+  mapping = aes(x = body_mass_g, y = .resid, color = sex)
+) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Body mass (g)", y = "Residual (mm)", color = "Sex") +
+  theme_bw()
+```
+
+This focuses on whether the model captures the body-mass relationship **within each sex**. The smooth lines summarize residual patterns separately for females and males.
+
+- Roughly horizontal smooth lines near zero support the shared-slope model.
+
+- Opposite trends—for example, increasing residuals for males and decreasing residuals for females—suggest the sexes may need different slopes, motivating an interaction.
+
+- Curved trends suggest a nonlinear relationship may be needed.
+
+For this additive model, fitted values are a linear transformation of body mass within each sex, so the plots contain closely related information. **The second makes group-specific trends easier to interpret.**
+
+### 7. Interaction model
+
+An **interaction model**, `flipper_length_mm ~ body_mass_g * sex`, would allow the body-mass slope to differ by sex. This would mean a slightly different wording to the question to make the interaction explicit:
+
+**Question:** Does the relationship between body mass and mean flipper length differ between female and male Adélie penguins?
+
+An additive model assumes the same body-mass slope for both groups. An **interaction model allows that slope to differ by sex**. Notice we use `body_mass_g * sex`. The `*` is a shortcut for `body_mass_g + sex + body_mass_g:sex`.
+
+```{r}
+flipper_model_int <- lm(
+  flipper_length_mm ~ body_mass_g * sex,
+  data = adelie_dat
+)
+
+tidy(flipper_model_int) 
+```
+
+The fitted equation is:
+
+$$
+\widehat{\text{flipper length}} =
+\hat\beta_0 + \hat\beta_1\,\text{body mass}
++ \hat\beta_2\,I(\text{male})
++ \hat\beta_3\,\text{body mass}\,I(\text{male}).
+$$
+
+Here, $I(\text{male})$ equals 1 for male and 0 for female. Female is our reference category.
+
+- **Female:** predicted flipper length = intercept + body-mass coefficient × body mass.
+- **Male:** predicted flipper length = (intercept + male coefficient) + (body-mass coefficient + interaction coefficient) × body mass.
+
+The model estimates a separate slope and intercept for each group. The lines **can be nonparallel**; the interaction model permits different slopes without establishing that the population slopes differ.
+
+#### Interpret the output
+
+| Output term | Interpretation |
+|------------------------------------|------------------------------------|
+| `(Intercept)` | Predicted mean flipper length for a female with body mass 0 g. |
+| `body_mass_g` | Predicted increase in mean flipper length, in mm, per additional gram of body mass **for females**, the reference group. |
+| `sexmale` | Predicted male-minus-female difference in mean flipper length **at body mass 0 g**. This is not an overall sex difference. |
+| `body_mass_g:sexmale` | Difference between the male and female body-mass slopes, in mm/g. Add it to the female slope to obtain the male slope. |
+
+For these data, the estimates are approximately:
+
+- **Female intercept:** 169.40 mm.
+- **Female slope:** 0.00546 mm/g
+- **Male coefficient:** −4.719 mm, the difference at 0 g.
+- **Interaction coefficient:** +0.001397 mm/g, the male-minus-female slope difference.
+
+The predicted **male intercept** is approximately $169.397 - 4.719 = 164.678$ mm, and the predicted **male slope** is approximately $0.005461 + 0.001397 = 0.006859$ mm/g.
+
+This model suggests that the predicted mean flipper length increases with body mass in both sexes, with a **steeper estimated increase for males**.
+
+**The interpretation of the main effects changes when we include an interaction.** The numeric coefficient is now the slope for females rather than a shared slope. The `sexmale` coefficient describes the group difference at 0 g rather than a constant difference across body masses.
+
+Next we calculate predictions at a sequence of body masses for each sex. Create a separate sequence within each sex’s observed body-mass range and plot:
+
+```{r}
+prediction_grid <- adelie_dat |>
+  group_by(sex) |>
+  reframe(
+    body_mass_g = seq(
+      min(body_mass_g),
+      max(body_mass_g),
+      length.out = 100
+    )
+  )
+
+prediction_grid <- prediction_grid |>
+  mutate(
+    predicted_flipper_mm = as.numeric(
+      predict(flipper_model_int, newdata = prediction_grid)
+    )
+  )
+
+head(prediction_grid)
+
+ggplot(
+  data = adelie_dat,
+  mapping = aes(x = body_mass_g, y = flipper_length_mm, color = sex)
+) +
+  geom_point(alpha = 0.5) +
+  geom_line(
+    data = prediction_grid,
+    mapping = aes(y = predicted_flipper_mm, group = sex),
+    linewidth = 1.1
+  ) +
+  labs(
+    x = "Body mass (g)",
+    y = "Flipper length (mm)",
+    color = "Sex",
+    title = "Predicted flipper length from the interaction model",
+    subtitle = "Lines span each group's observed body-mass range"
+  ) +
+  theme_bw()
+
+preds <- predict(
+  flipper_model_int,
+  newdata = prediction_grid,
+  interval = "confidence",
+  level = 0.95
+) |>
+  as_tibble()
+
+prediction_bands <- bind_cols(prediction_grid, preds)
+
+ggplot(
+  data = adelie_dat,
+  mapping = aes(x = body_mass_g, y = flipper_length_mm, color = sex)
+) +
+  geom_ribbon(
+    data = prediction_bands,
+    mapping = aes(
+      x = body_mass_g, ymin = lwr, ymax = upr,
+      fill = sex, group = sex
+    ),
+    inherit.aes = FALSE,
+    alpha = 0.18
+  ) +
+  geom_point(alpha = 0.5) +
+  geom_line(
+    data = prediction_bands,
+    mapping = aes(y = fit, group = sex),
+    linewidth = 1.1
+  ) +
+  labs(
+    x = "Body mass (g)", y = "Flipper length (mm)",
+    color = "Sex", fill = "Sex",
+    title = "Interaction model: predicted means with 95% confidence intervals"
+  ) +
+  theme_bw()
+```
+
+#### Inspect the model:
+
+Residuals versus fitted values
+
+```{r}
+ggplot(
+  data = int_results,
+  mapping = aes(x = .fitted, y = .resid, color = sex)
+) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Fitted flipper length (mm)", y = "Residual (mm)", color = "Sex") +
+  theme_bw()
+```
+
+Residuals versus body mass
+
+```{r}
+ggplot(
+  data = int_results,
+  mapping = aes(x = body_mass_g, y = .resid, color = sex)
+) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "loess", formula = y ~ x, se = FALSE) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Body mass (g)", y = "Residual (mm)", color = "Sex") +
+  theme_bw()
+```
+
+### Linear model workflow
+
+**Question → inspect and plot → fit → interpret → diagnose → predict and communicate limitations.**
+
+| Need | Function or approach |
+|---------------------------------|---------------------------------------|
+| Fit the model | `lm(response ~ predictor, data = ...)` |
+| Coefficient estimates | `tidy(model)` |
+| Model-level summaries | `glance(model)` |
+| Fitted values, residuals, influence | `augment(model, data = training_data)` |
+| Predictions for new predictor values | `augment(model, newdata = prediction_data)` |
+| Check diagnostics | Plots plus information about study design |
+
+## Sources and acknowledgments
+
+This is an original teaching adaptation inspired by the progression in [ModernDive, Chapter 5: Simple Linear Regression](https://moderndive.com/v2/05-regression.html), by Chester Ismay and Albert Y. Kim with collaborators. It retains exploration, interpretation, fitted-value/residual connections, learning checks, and numeric/categorical predictor examples, using newly written prompts and a different worked dataset. It is not a reproduction of the chapter or its exercise key. Diagnostic material is expanded for this session.
+
+Technical references:
+
+- [R documentation: `predict.lm()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/predict.lm.html)
+
+- [broom:`tidy.lm()`](https://broom.tidymodels.org/reference/tidy.lm.html)
+
+- [broom:`glance.lm()`](https://broom.tidymodels.org/reference/glance.lm.html)
+
+- [broom:`augment.lm()`](https://broom.tidymodels.org/reference/augment.lm.html)
+
+- [R documentation: diagnostic plots for linear models](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/plot.lm.html)
+
+Data: Horst, A. M., Hill, A. P., and Gorman, K. B. (2020), [palmerpenguins](https://allisonhorst.github.io/palmerpenguins/), DOI [10.5281/zenodo.3960218](https://doi.org/10.5281/zenodo.3960218). Data collected and made available by Dr. Kristen Gorman and Palmer Station LTER. Original study: Gorman, Williams, and Fraser (2014), *PLOS ONE* 9(3): e90081, [doi:10.1371/journal.pone.0090081](https://doi.org/10.1371/journal.pone.0090081).
