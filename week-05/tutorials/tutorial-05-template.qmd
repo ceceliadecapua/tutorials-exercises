@@ -1,0 +1,1388 @@
+---
+title: "05 - tutorial"
+author: "Jennifer Bigman"
+format: html
+editor: visual
+---
+
+Overview
+
+In this tutorial, we will build on the core data-wrangling skills from last week and introduce additional tools for manipulating, combining, and cleaning data in R. We will work primarily with the penguins data from the `palmerpenguins` package and the data frames in the `nycflights13` package.
+
+By the end of the tutorial, you should be able to:
+
+use `across()` to apply the same operation to multiple variables; use `count()` to quickly count observations by one or more groups; use `case_when()` to create variables from multiple logical conditions; understand primary and foreign keys and use joins, particularly `left_join()`, to combine related data frames; use basic functions from {stringr} to clean and manipulate character strings; use basic functions from {lubridate} to create, convert, and extract information from dates and date-times; use `round()` and distinguish between `log()` and `log10()`; understand factors and control the order of factor levels; use basic regular expressions to identify and extract patterns in character strings; and combine these tools with {dplyr} functions to build more complex data-wrangling workflows.
+
+# Setup
+
+```{r}
+library(tidyverse)
+library(palmerpenguins)
+library(nycflights13)
+```
+
+# `across()`: apply a function across columns
+
+`across()` is useful when you want to apply the same function to several variables. It is commonly used inside `summarise()` or `mutate()`.
+
+Suppose we want the mean of every measurement variable ending in `mm`, separately by species.
+
+We could write each calculation individually:
+
+```{r}
+penguins |>
+  group_by(species) |>
+  summarise(
+    bill_length_mean = mean(bill_length_mm, na.rm = TRUE),
+    bill_depth_mean = mean(bill_depth_mm, na.rm = TRUE),
+    flipper_length_mean = mean(flipper_length_mm, na.rm = TRUE)
+  )
+```
+
+Or we can use `across()`:
+
+```{r}
+penguins |>
+  group_by(species) |>
+  summarise(
+    across(
+      ends_with("mm"),
+      ~ mean(.x, na.rm = TRUE)
+    )
+  )
+```
+
+We first `group_by` `species` and then take the `mean` **across** all columns that end in `mm`. To do so, we put the `across` and `mean` functions inside `summarise`.
+
+The selection rules inside `across()` use the same "tidyselect" helpers that work in `select()`.
+
+::: callout-note
+Current {dplyr} syntax places extra function arguments such as `na.rm = TRUE` inside an anonymous function: `~ mean(.x, na.rm = TRUE)`. Older examples may show `across(..., mean, na.rm = TRUE)`.
+
+An anonymous function is one that does not have a name and is useful when you only need to use it once or have a small task.
+
+In the example above:
+
+`across()` selects each column ending in `"mm"` and applies the anonymous function to it.
+
+- **`~`** introduces the anonymous function.
+
+- **`.x`** represents the column currently being processed.
+
+- **`mean(.x, na.rm = TRUE)`** calculates that column’s mean, ignoring missing values.
+:::
+
+## Selecting a range inside `across()`
+
+You can apply the function (i.e., `~ mean(.x, na.rm = TRUE)`) to more than one column at a time. For example, you can find minimum values for a range of measurement variables by using `:`. This code will find the minimum value of each column starting with `bill_depth_mm` and ending with `body_mass_g`, for each species and island (and then drop the grouping structure after with `.groups = "drop"`).
+
+```{r}
+penguins |>
+  group_by(species, island) |>
+  summarise(
+    across(
+      bill_depth_mm:body_mass_g,
+      ~ min(.x, na.rm = TRUE)
+    ),
+    .groups = "drop"
+  )
+```
+
+## Selecting specific variables
+
+You can also use the `c()` function to select variables (columns) and apply a function to all selected columns at once. This code finds the minimum `bill_length_mm` and `body_mass_g` by species. This is different than the above code, which found the minimum value of columns starting with `bill_depth_mm` and ending with `body_mass_g`.
+
+```{r}
+penguins |>
+  group_by(species) |>
+  summarise(
+    across(
+      c(bill_length_mm, body_mass_g),
+      ~ min(.x, na.rm = TRUE)
+    )
+  )
+```
+
+## Using selection helpers
+
+You can also use the selection helpers you learned about earlier, e.g., `starts_with`, `contains`, and `ends_with`. For example, this code finds the maximum value for each column that starts with "bill" while ignoring missing values.
+
+```{r}
+penguins |>
+  group_by(year) |>
+  summarise(
+    across(
+      starts_with("bill"),
+      ~ max(.x, na.rm = TRUE)
+    )
+  )
+```
+
+Other selection helpers include `where()`, `matches()`, `num_range()`, `all_of()`, and `any_of()`. For example:
+
+```{r}
+penguins |>
+  group_by(year) |>
+  summarise(
+    across(
+      matches("_mm$"),
+      ~ mean(.x, na.rm = TRUE)
+    )
+  )
+```
+
+This code calculates the mean of each variable whose name ends in `"_mm"` for each year, excluding missing values. `matches("_mm$")` selects columns whose names end in **`"_mm"`**; the `$` marks the end of the name
+
+To find out more, you can look these up using the help function (`?`).
+
+## Controlling output names
+
+Notice that when we summarized across columns in quite a few examples above, the columns came back with the same name as the column being summarized.
+
+```{r}
+penguins |>
+  group_by(year) |>
+  summarise(
+    across(
+      starts_with("bill"),
+      ~ max(.x, na.rm = TRUE)
+    )
+  )
+```
+
+Overwriting the original columns could get confusing if you later want to combine them in a new dataframe.
+
+Use `.names` to describe how newly created variables should be named.
+
+```{r}
+penguins |>
+  group_by(year) |>
+  summarise(
+    across(
+      starts_with("bill"),
+      ~ max(.x, na.rm = TRUE),
+      .names = "max_{.col}"
+    )
+  )
+```
+
+The above code renames the summarized (new) columns with a pattern - `max_` + the column name. **`{.col}`** is a placeholder for the name of the column being processed. Inside `.names`, R replaces it with each selected column’s name.
+
+Here, `.names = "max_{.col}"` adds `max_` before the original name.
+
+## Applying multiple functions
+
+You can also apply multiple functions at once. Say you wanted to calculate the mean and standard deviation for variables containing length and give the resulting columns new names.
+
+Use `list()` to provide multiple functions to `across()`. Here, we name the functions `avg` and `stdev`.
+
+The `.names` argument controls how the new columns are named. Within `.names`, `{.fn}` is a placeholder for the function name (`avg` or `stdev`) and `{.col}` is a placeholder for the original column name.
+
+Because we specify: `.names = "{.fn}_{.col}"`, `{dplyr}` combines the function name and column name. For example, the mean of `bill_length_mm` will be named `avg_bill_length_mm`, and its standard deviation will be named `stdev_bill_length_mm`.
+
+```{r}
+penguins |>
+  group_by(species) |>
+  summarise(
+    across(
+      contains("length"),
+      list(
+        avg = ~ mean(.x, na.rm = TRUE),
+        stdev = ~ sd(.x, na.rm = TRUE)
+      ),
+      .names = "{.fn}_{.col}"
+    )
+  )
+```
+
+To review, inside `.names`:
+
+- `{.col}` means the original variable name.
+- `{.fn}` means the name assigned to the function in the function list.
+
+## Practice: `across()`
+
+### Practice 1
+
+What is the median value of each variable measured in millimeters for all penguins on each island?
+
+Name each resulting variable with the original name followed by `_median`.
+
+```{r}
+# Write your code here
+penguins |>
+  group_by(island) |>
+  summarise(
+    across(
+      contains("mm"),
+      ~ median(.x, na.rm = TRUE),
+      .names = "{.col}_median"
+    )
+  )
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+penguins |>
+  group_by(island) |>
+  summarise(
+    across(
+      contains("mm"),
+      ~ median(.x, na.rm = TRUE),
+      .names = "{.col}_median"
+    )
+  )
+```
+:::
+
+### Practice 2
+
+For each island, what is the maximum value of every numeric variable for Adelie penguins?
+
+```{r}
+# Write your code here
+penguins |>
+  group_by(species == "Adelie") |>
+  group_by(island) |>
+  summarize(
+    across(
+      where(is.numeric),
+      ~ max(.x, na.rm = TRUE)
+    )
+  )
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+penguins |>
+  filter(species == "Adelie") |>
+  group_by(island) |>
+  summarise(
+    across(
+      where(is.numeric),
+      ~ max(.x, na.rm = TRUE)
+    )
+  )
+```
+:::
+
+### Practice 3
+
+Among penguins not observed on Biscoe Island, what are the average bill length and flipper length for each species?
+
+Try and write this in one pipeline that names the summary variables with their original name followed by `_avg`.
+
+```{r}
+# Write your code here
+penguins |>
+  filter(island != "Biscoe") |>
+  select(species:body_mass_g) |>
+  group_by(species) |>
+  summarize(
+    across(
+      contains("length"),
+      ~ mean(.x, na.rm = TRUE),
+      .names = {"{.col}_avg"}
+    )
+  )
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+penguins |>
+  filter(island != "Biscoe") |>
+  select(species:body_mass_g) |>
+  group_by(species) |>
+  summarise(
+    across(
+      contains("length"),
+      ~ mean(.x, na.rm = TRUE),
+      .names = "{.col}_avg"
+    )
+  )
+```
+:::
+
+# `count()`: count observations by group
+
+How many observations do we have per species?
+
+To count rows by group, we can combine `group_by()`, `summarise()`, and `n()`.
+
+```{r}
+penguins |>
+  group_by(species) |>
+  summarise(n = n())
+```
+
+For this common task, `count()` is a shortcut.
+
+```{r}
+penguins |>
+  count(species)
+```
+
+## Count by multiple variables
+
+You can also obtain counts for combinations of variables. This code counts the number of observations per species per year:
+
+```{r}
+penguins |>
+  count(species, year)
+```
+
+And here, we obtain the number of observations per island:
+
+```{r}
+penguins |>
+  count(island)
+```
+
+::: callout-note
+By default, `count()` counts rows. If your dataset already contains a column of counts, use `wt =` to sum those counts instead.
+
+For example, the following code creates a summarized dataset in which each row represents a species–sex combination and `n_penguins` gives the number of penguins in that group:
+
+```{r}
+penguin_counts <- penguins |>
+  count(species, sex, name = "n_penguins")
+
+penguin_counts
+```
+
+In `penguin_counts`, each row represents a species–sex combination rather than an individual penguin. If you now use `count(species)` without `wt =`, `count()` counts the number of rows for each species:
+
+```{r}
+penguin_counts |>
+  count(species)
+```
+
+This code tells you how many species–sex groups are present, not how many individual penguins there are.
+
+If you want to know how many individual penguins are represented for each species in a dataset already summarized this way, use `wt = n_penguins`:
+
+```{r}
+penguin_counts |>
+  count(species, wt = n_penguins)
+```
+
+This sums `n_penguins` within each species, giving the total number of penguins represented by those rows.
+:::
+
+## Practice: `count()`
+
+### Practice 1
+
+How many observations are there for each island and year for every penguin species?
+
+```{r}
+# Write your code here
+penguins |>
+  count(species, island, year)
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+penguins |>
+  count(species, island, year)
+```
+:::
+
+### Practice 2
+
+How many observations are there for each sex for both Adelie and Gentoo penguins?
+
+```{r}
+# Write your code here
+penguins |>
+  filter(species == "Adelie" | species == "Gentoo") |>
+  count(species, sex)
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+penguins |>
+  filter(species %in% c("Adelie", "Gentoo")) |>
+  count(species, sex)
+```
+:::
+
+# `case_when()`: create values from conditions
+
+`case_when()` is useful when a new variable depends on several possible conditions. It is commonly used inside `mutate()`.
+
+The basic pattern is:
+
+``` r
+data |>
+  mutate(
+    new_variable = case_when(
+      condition_1 ~ value_1,
+      condition_2 ~ value_2,
+      .default = default_value
+    )
+  )
+```
+
+Conditions are evaluated from top to bottom, so their order can matter.
+
+## Create body-size categories
+
+Create a new variable called `size_bin` that categorizes body mass into distinct bins. This code will create `size_bin` and for any observation where `body_mass_g` \> 4500, the value in `size_bin` will be `large`; for any where `body_mass_g` \<= 4500 but \> 3000, the value in `size_bin` will be `medium`, and for any observation where `body_mass_g` \<= 3000, the value in `size_bin` will be `small`.
+
+```{r}
+penguins |>
+  mutate(
+    size_bin = case_when(
+      body_mass_g > 4500 ~ "large",
+      body_mass_g > 3000 & body_mass_g <= 4500 ~ "medium",
+      body_mass_g <= 3000 ~ "small",
+      .default = NA_character_
+    )
+  )
+```
+
+`.default = NA_character_` tells `case_when()` what value to use when none of the conditions are matched.
+
+You do not really need this step because any row with a `body_mass_g` value of `NA` will yield a `size_bin` value of NA. Using `.default = NA_character_` instead makes that `NA` a character.
+
+You can also simplify the above code because each condition is checked sequentially. Thus, the middle condition can be simplified:
+
+```{r}
+penguins |>
+  mutate(
+    size_bin = case_when(
+      body_mass_g > 4500 ~ "large",
+      body_mass_g > 3000 ~ "medium",
+      body_mass_g <= 3000 ~ "small",
+      .default = NA_character_
+    )
+  )
+```
+
+## Combine `case_when()` with other dplyr verbs
+
+For Adelie penguins, bin flipper lengths into small or large depending on whether they are less than or greater than 200 mm (for each observation).
+
+```{r}
+penguins |>
+  select(species, year, flipper_length_mm) |>
+  filter(species == "Adelie") |>
+  mutate(
+    flipper_bin = case_when(
+      flipper_length_mm < 200 ~ "small",
+      flipper_length_mm >= 200 ~ "large"
+      )
+  )
+```
+
+## Practice: `case_when()`
+
+### Practice 1
+
+Create a variable called `study_year` where:
+
+- 2007 becomes `"Year 1"`
+- 2008 becomes `"Year 2"`
+- 2009 becomes `"Year 3"`
+
+```{r}
+# Write your code here
+penguins |>
+  mutate(
+    study_year = case_when(
+      year == 2007 ~ "Year 1",
+      year == 2008 ~ "Year 2",
+      year == 2009 ~ "Year 3",
+      .default = NA_character_
+    )
+  )
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+penguins |>
+  mutate(
+    study_year = case_when(
+      year == 2007 ~ "Year 1",
+      year == 2008 ~ "Year 2",
+      year == 2009 ~ "Year 3",
+      .default = NA_character_
+    )
+  )
+```
+:::
+
+### Practice 2
+
+How would you wrangle the data frame to ask this question: among Chinstrap penguins, how does flipper length relative to body mass vary, and which penguins have relatively high versus low flipper-length-to-body-mass ratios?
+
+Hint:
+
+1.  Keep only Chinstrap penguins.
+2.  Keep `flipper_length_mm` and `body_mass_g`.
+3.  Create `fm_ratio` as flipper length divided by body mass.
+4.  Create `ratio_bin` that is:
+    - `"high"` when `fm_ratio >= 0.05`
+    - `"low"` when `fm_ratio < 0.05`
+    - `"no record"` otherwise
+
+```{r}
+# Write your code here
+penguins |>
+  filter(species == "Chinstrap") |>
+  select(flipper_length_mm, body_mass_g) |>
+  mutate(
+    fm_ratio = flipper_length_mm/body_mass_g,
+    ratio_bin = case_when(
+      fm_ratio >= 0.05 ~ "high",
+      fm_ratio < 0.05 ~ "low",
+      .default = "no record"
+    )
+  )
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+penguins |>
+  filter(species == "Chinstrap") |>
+  select(flipper_length_mm, body_mass_g) |>
+  mutate(
+    fm_ratio = flipper_length_mm / body_mass_g,
+    ratio_bin = case_when(
+      fm_ratio >= 0.05 ~ "high",
+      fm_ratio < 0.05 ~ "low",
+      .default = "no record"
+    )
+  )
+```
+:::
+
+# Joins
+
+There are two main types of joins: mutating joins and filtering joins.
+
+Mutating joins add new variables to one data frame from matching observations in another.
+
+Filtering joins filter observations from one data frame based on whether or not they match an observation in another.
+
+For this section, we will be working with `nycflights13,` [a compilation of datasets](https://github.com/tidyverse/nycflights13) that contains information about all flights that departed from NYC (e.g. EWR, JFK and LGA) to destinations in the United States, Puerto Rico, and the American Virgin Islands) in 2013. The explanations and code used here are modified from Chapter 19 of Hadley Wickham's [R for Data Science](https://r4ds.hadley.nz/joins.html).
+
+To understand joins, you need to first understand how two tables can be connected through a pair of keys, within each table. In this section, you’ll learn about the two types of key and see examples of both in the datasets of the nycflights13 package. You’ll also learn how to check that your keys are valid and what to do if your table lacks a key.
+
+### Primary and foreign keys
+
+Every join involves a pair of keys: a primary key and a foreign key. A primary key is a variable or set of variables that uniquely identifies each observation. When more than one variable is needed, the key is called a compound key.
+
+Let's look at a few datasets in the `nycflights` package.
+
+`airlines` records two pieces of data about each airline: its carrier code and its full name. You can identify an airline with its two letter carrier code, making `carrier` the primary key.
+
+```{r}
+airlines
+```
+
+`airports` records data about each airport. You can identify each airport by its three letter airport code, making `faa` the primary key.
+
+```{r}
+airports
+```
+
+`weather` records data about the weather at the origin airports. You can identify each observation by the combination of location and time, making `origin` and `time_hour` the compound primary key. Note you can't see `time_hour` by just printing the name of the object. You have to use `glimpse()`.
+
+```{r}
+weather 
+
+glimpse(weather)
+```
+
+Let's look at `flights`, which is the main data frame in `nycflights13` that contains one row for each flight that departed from NYC (either JFK, LGA, or EWR) in 2013. The other data frames are metadata that provide additional information about airlines, airports, planes, weather, etc.
+
+```{r}
+flights
+
+glimpse(flights)
+
+nrow(flights)
+```
+
+Now we can use foreign keys to match information from these other data frames to flights so we can learn more about each flight. A foreign key is a variable (or set of variables) that corresponds to a primary key in another table. For example:
+
+`flights$tailnum` is a foreign key that corresponds to the primary key `planes$tailnum`. `flights$carrier` is a foreign key that corresponds to the primary key `airlines$carrier`. `flights$origin` is a foreign key that corresponds to the primary key `airports$faa`. `flights$dest` is a foreign key that corresponds to the primary key `airports$faa`. (all columns contain the same info - airport codes). (`flights$origin`, `flights$time_hour`) is a compound foreign key that corresponds to the compound primary key (`weather$origin`, `weather$time_hour`).
+
+Let's start with a mutating join. A mutating join allows you to combine variables from two data frames: it first matches observations by their keys, then copies across variables from one data frame to the other. Like `mutate()`, the join functions add variables to the right, so if your dataset has many variables, you won’t see the new ones. For these examples, we’ll make it easier to see what’s going on by creating a narrower dataset with just six variables:
+
+```{r}
+flights2 <- flights |> 
+  select(year, time_hour, origin, dest, tailnum, carrier)
+flights2
+
+glimpse(flights2)
+```
+
+There are four types of mutating join, but there’s one that you’ll use almost all of the time: `left_join()`. It’s special because the output will always have the same rows as x, the data frame you’re joining to. The primary use of `left_join()` is to add in additional metadata. For example, we can use `left_join()` to add the full airline name to the `flights2` data:
+
+```{r}
+temp <- flights2 |>
+  left_join(airlines)
+
+glimpse(temp)
+```
+
+Or we could find out the temperature and wind speed when each plane departed:
+
+```{r}
+temp <- flights2 |> 
+  left_join(weather |> select(origin, time_hour, temp, wind_speed))
+
+glimpse(temp)
+```
+
+When `left_join()` fails to find a match for a row in x, it fills in the new variables with missing values. For example, there’s no information about the plane with tail number N3ALAA so the type, engines, and seats will be missing:
+
+```{r}
+temp <- flights2 |> 
+  filter(tailnum == "N3ALAA") |> 
+  left_join(planes |> select(tailnum, type, engines, seats))
+
+glimpse(temp)
+```
+
+By default, `left_join()` will use all variables that appear in both data frames as the join key, the so called natural join. This is a useful heuristic, but it doesn’t always work. For example, what happens if we try to join `flights2` with the complete `planes` dataset?
+
+```{r}
+temp <- flights2 |> 
+  left_join(planes)
+
+glimpse(temp)
+```
+
+We get a lot of missing matches because our join is trying to use `tailnum` and `year` as a compound key. Both `flights` and `planes` have a `year` column but they mean different things: `flights$year` is the year the flight occurred and `planes$year` is the year the plane was built. We only want to join on `tailnum` so we need to provide an explicit specification with `join_by()`:
+
+```{r}
+temp <- flights2 |> 
+  left_join(planes, join_by(tailnum))
+
+glimpse(temp)
+```
+
+Note that the `year` variables are separated in the output with a suffix (`year.x` and `year.y`), which tells you whether the variable came from the x or y argument. You can override the default suffixes with the suffix argument. Also note that `join_by(tailnum)` is short for `join_by(tailnum == tailnum)`.
+
+Let's move on to filtering joins. As you might guess the primary action of a filtering join is to filter the rows. There are two types: semi-joins and anti-joins. Semi-joins keep all rows in x that have a match in y. For example, we could use a semi-join to filter the airports dataset to show just the origin airports:
+
+```{r}
+temp <- airports |> 
+  semi_join(flights2, join_by(faa == origin))
+
+glimpse(temp)
+```
+
+This keeps only airports whose `faa` code appears in `flights2$origin`.
+
+Anti-joins are the opposite: they return all rows in x that don’t have a match in y. For example, we can find rows that are missing from `airports` by looking for flights that don’t have a matching destination airport:
+
+```{r}
+temp <- flights2 |> 
+  anti_join(airports, join_by(dest == faa)) |> 
+  distinct(dest)
+
+glimpse(temp)
+```
+
+`distinct()` keeps only unique rows or unique values of selected variables. Above, we used it so each unmatched `tailnum` appears only once.
+
+We can also find which `tailnums` are missing from `planes`:
+
+```{r}
+temp <- flights2 |>
+  anti_join(planes, join_by(tailnum)) |> 
+  distinct(tailnum)
+
+glimpse(temp)
+```
+
+There is A LOT more to know about joins but now you have an introduction. For more practice and information, see: 1. [The full R for Data Science Chapter](https://r4ds.hadley.nz/joins.html#introduction) 2. [dplyr vignette](https://dplyr.tidyverse.org/articles/two-table.html) 3. [R documentation for mutating joins](https://dplyr.tidyverse.org/reference/mutate-joins.html) 4. [R documentation for filtering joins](https://dplyr.tidyverse.org/reference/filter-joins.html)
+
+# Strings
+
+In R, a string is text. Strings are stored as character values and are usually written inside quotation marks. The `{tidyverse}` has a package called `{stringr}` that makes working with strings easier and more consistent. There is a lot to learn here and we will just touch on the basics. For more information, check out the [package documentation](https://stringr.tidyverse.org/articles/stringr.html).
+
+There are four main families of functions in `{stringr}`:
+
+1.  Character manipulation: these functions allow you to manipulate individual characters within the strings in character vectors.
+2.  Whitespace tools to add, remove, and manipulate whitespace.
+3.  Locale sensitive operations whose operations will vary from locale to locale.
+4.  Pattern matching functions. These recognize four engines of pattern description. The most common is regular expressions (which you are now familiar with), but there are three other tools.
+
+Let's go over the most common uses. For this, we will work with a vector of 3 strings:
+
+```{r}
+species <- c(
+  "  Sandbar Shark",
+  "BLACKTIP SHARK  ",
+  "Lemon Shark"
+)
+```
+
+There is extra space around the first string so use `str_trim` to remove it:
+
+```{r}
+species <- str_trim(species)
+
+species
+```
+
+The capitalization is a mess. Let's fix it by making it all lowercase:
+
+```{r}
+species <- str_to_lower(species)
+
+species  
+```
+
+We can ask if the vector of strings contains a specific string, "Shark":
+
+```{r}
+str_detect(species, "Shark")
+```
+
+Remember, R is case sensitive.
+
+```{r}
+str_detect(species, "shark")
+```
+
+We can replace a string or part of a string:
+
+```{r}
+# Replace text
+str_replace(species, "lemon", "yellow")
+```
+
+Let's look a more realistic data wrangling example. We first create a small tibble called fish with two columns: `sample_id` (an ID that contains both the state abbreviation and a sample number) and `species` (species names that are inconsistently formatted). Then we use `mutate()` to clean and create variables:
+
+`str_trim(species)` removes extra spaces from the beginning and end of the species names. Here, `" sandbar shark "` becomes `"sandbar shark"`.
+
+`str_to_title(species)` standardizes capitalization so each word begins with a capital letter. `"sandbar shark"` becomes `"Sandbar Shark"` and `"BLACKTIP SHARK"` becomes `"Blacktip Shark"`.
+
+`str_sub(sample_id, 1, 2)` takes the first two characters from each sample_id and stores them in a new column called `state`. `"DE-001"` becomes `"DE"` and `"NJ-003"` becomes `"NJ"`.
+
+```{r}
+fish <- tibble(
+  sample_id = c("DE-001", "DE-002", "NJ-003"),
+  species = c(" sandbar shark ", "BLACKTIP SHARK", "Lemon Shark")
+)
+
+fish |>
+  mutate(
+    species = str_trim(species),
+    species = str_to_title(species),
+    state = str_sub(sample_id, 1, 2)
+  )
+```
+
+If you then wanted to remove the state abbreviation from the `sample_id` column, you could use `str_remove`:
+
+```{r}
+fish |>
+  mutate(
+    species = str_trim(species),
+    species = str_to_title(species),
+    state = str_sub(sample_id, 1, 2),
+    sample_id = str_remove(sample_id, "^[A-Z]{2}-")
+  )
+```
+
+## Regular expressions
+
+A regular expression, often called a regex, is a way to describe a pattern of text. Regular expressions become useful when we do not want to search for one exact string, but instead want to search for a pattern. For example, suppose we have several sample IDs:
+
+```{r}
+sample_id <- c(
+  "DE-001",
+  "DE-023",
+  "NJ-014",
+  "MD-105"
+)
+```
+
+The simplest regular expression is just the exact text we want to find.
+
+```{r}
+str_detect(sample_id, "DE")
+
+```
+
+This asks: does each string contain the pattern "DE"? The result is a logical vector of TRUE and FALSE values.
+
+#### Special Characters in Regular Expressions
+
+Some characters have special meanings inside regular expressions. `.` = any character (a period matches any single character).
+
+```{r}
+str_detect(c("cat", "cot", "cut", "dog"), "c.t")
+```
+
+The pattern `"c.t"` means: `c`, followed by any one character, followed by `t`. So, it matches "cat", "cot", and "cut".
+
+Another example is `[]` = one of these characters. You have seen this before! Square brackets let us specify a set of characters that could occur in one position.
+
+```{r}
+str_detect(
+  c("cat", "cot", "cut", "cet"),
+  "c[ao]t"
+)
+
+```
+
+The pattern `c[ao]t` means `c`, followed by either `a` or `o`, followed by `t`. So, it matches `"cat"` and `"cot"`.
+
+We can also specify ranges. `[0-9]` means any digit from 0 through 9.
+
+```{r}
+str_detect(
+  c("sample1", "sample7", "sampleA"),
+  "[0-9]"
+)
+```
+
+Sometimes we care about where a pattern occurs. `^` means the beginning of a string.
+
+```{r}
+str_detect(sample_id, "^DE")
+```
+
+This asks: does the string start with "DE"? For our sample IDs, this identifies samples from Delaware.
+
+`$` means the end of a string.
+
+```{r}
+species <- c(
+  "Sandbar Shark",
+  "Blacktip Shark",
+  "Shark Sucker"
+)
+
+str_detect(species, "Shark$")
+```
+
+This asks: does the string end with "Shark"?
+
+The vertical bar `|` means OR.
+
+```{r}
+str_detect(sample_id, "DE|NJ")
+```
+
+This asks: does the string contain "DE" OR "NJ"?
+
+We could use this inside `filter()`:
+
+```{r}
+samples <- tibble(
+  sample_id = c("DE-001", "DE-023", "NJ-014", "MD-105")
+)
+
+samples |>
+  filter(str_detect(sample_id, "^DE|^NJ"))
+
+```
+
+This keeps samples whose IDs begin with either "DE" or "NJ".
+
+#### Using Regex to Extract Information
+
+Regular expressions become especially useful when combined with {stringr} functions. For example, we can extract the numeric portion of our sample IDs:
+
+```{r}
+str_extract(sample_id, "[0-9]+")
+```
+
+Here, `[0-9]` means any digit, and `+` means one or more of the preceding pattern. Therefore, `[0-9]+` means one or more numbers, which extracts 001, 023, 014, 105
+
+You do not need to memorize every regular-expression symbol. You can always look them up!
+
+# Dates and Times
+
+Dates and times are hard because they have to reconcile two physical phenomena (the rotation of the Earth and its orbit around the sun) with a whole raft of geopolitical phenomena including months, time zones, and DST. This tutorial won’t teach you every last detail about dates and times, but it will give you a solid grounding of practical skills that will help you with common data analysis challenges.
+
+For more information, consult [Chapter 17 of R for Data Science](https://r4ds.hadley.nz/datetimes.html) and the {[lubridate} package](https://lubridate.tidyverse.org/).
+
+Dates and times are common in real datasets, but R needs to know that a variable represents a date or date-time before we can easily work with it. The `{lubridate}` package, which is part of the `{tidyverse}`, provides functions that make working with dates and times easier.
+
+### Dates versus date-times
+
+R distinguishes between a date, which contains a year, month, and day, and a date-time, which also contains a time of day.
+
+We can get today's date with `today()` and the current date and time with `now()`:
+
+```{r}
+today() # date
+
+now() # date-time
+```
+
+We can check how R stores these objects using `class()`:
+
+```{r}
+class(today())
+
+class(now())
+```
+
+`"POSIXct"` and `"POSIXt"` are classes for date-time objects in R—values that include both a date and a time.
+
+- **`POSIXct`** stores date-times as the number of seconds since January 1, 1970 (UTC).
+
+- **`POSIXt`** is a shared parent class for R’s two date-time classes: `POSIXct` and `POSIXlt`.**`POSIXlt`** stores its components separately, such as year, month, day, hour, and minute.
+
+Dates are generally displayed using the format YYYY-MM-DD; For example 2026-08-10 means August 10, 2026.
+
+### Converting Character Strings to Dates
+
+Dates are often imported into R as character strings rather than as actual dates.
+
+For example:
+
+```{r}
+date <- "2026-08-10"
+
+date
+
+class(date)
+```
+
+Although this looks like a date to us, R currently sees it as text.
+
+We can use functions from `{lubridate}` to convert character strings into dates.
+
+The name of the function tells R the order in which the components of the date appear:
+
+`ymd() = year, month, day` `mdy() = month, day, year` `dmy() = day, month, year`
+
+```{r}
+ymd("2026-08-10")
+
+mdy("August 10, 2026")
+
+dmy("10-Aug-2026")
+```
+
+A useful rule is:
+
+Look at the order of the year, month, and day in your data and choose the corresponding {lubridate} function. For example:
+
+```{r}
+date <- ymd("2026-08-10")
+
+class(date)
+```
+
+R now recognizes this variable as a date rather than as character text. `Date` represents a calendar date; `POSIXct` represents a date and time.
+
+### Converting Character Strings to Date-Times
+
+If our data contain both a date and a time, we can use similar functions. For example, `ymd_hms()` means: year-month-day hour-minute-second
+
+```{r}
+datetime <- ymd_hms("2026-08-10 14:35:22")
+
+datetime
+
+class(datetime)
+```
+
+If seconds are not included, we can use `ymd_hm()`:
+
+```{r}
+ymd_hm("2026-08-10 14:35")
+```
+
+The same idea works with other date orders:
+
+```{r}
+mdy_hm("08/10/2026 14:35")
+```
+
+### Extracting Information from Dates
+
+Once R recognizes a variable as a date or date-time, we can extract individual components from it. Let's create a date-time:
+
+```{r}
+datetime <- ymd_hms("2026-08-10 14:35:22")
+
+datetime
+```
+
+We can extract the year, month, day of the month, day of year, day of the week, and components of the time:
+
+```{r}
+year(datetime)
+
+month(datetime)
+
+mday(datetime)
+
+yday(datetime)
+
+wday(datetime)
+
+hour(datetime)
+
+minute(datetime)
+
+second(datetime)
+```
+
+### Using labels for months and weekdays
+
+By default, `month()` and `wday()` return numbers. We can request labels instead:
+
+```{r}
+month(datetime, label = TRUE)
+
+wday(datetime, label = TRUE)
+```
+
+We can also request the full weekday name:
+
+```{r}
+wday(datetime, label = TRUE, abbr = FALSE)
+```
+
+### Working with dates inside `mutate()`
+
+Date functions become especially useful when combined with `mutate()`. Let's create a small dataset with sampling dates and times:
+
+```{r}
+fish_samples <- tibble(
+  sample_id = c("DE-001", "DE-002", "DE-003"),
+  datetime = ymd_hms(c(
+    "2025-05-15 08:30:00",
+    "2025-06-20 14:15:00",
+    "2025-07-10 21:45:00"
+  ))
+)
+
+fish_samples
+```
+
+Note the `datetime` column is labelled **`<dttm>.<dttm>`** is the label a tibble displays for a date-time column, usually one with the classes `"POSIXct" "POSIXt"`. It is not a separate class.
+
+We can use `mutate()` to create new variables containing different components of the date and time:
+
+```{r}
+temp <- fish_samples |>
+  mutate(
+    year = year(datetime),
+    month = month(datetime, label = TRUE),
+    day_of_year = yday(datetime),
+    weekday = wday(datetime, label = TRUE),
+    hour = hour(datetime)
+  )
+
+glimpse(temp)
+```
+
+Here we are taking information stored within datetime and creating new variables that may be useful for filtering, summarizing, plotting, or modeling our data. For example, we might want to compare observations among months or examine whether observations differ with time of day.
+
+### Creating a Date from Separate Columns
+
+Sometimes dates are stored in several different columns. For example:
+
+```{r}
+sampling <- tibble(
+  year = c(2024, 2024, 2025),
+  month = c(6, 7, 5),
+  day = c(15, 20, 10)
+)
+
+sampling
+```
+
+We can combine these columns into a single date using `make_date()`:
+
+```{r}
+sampling |>
+  mutate(
+    date = make_date(year, month, day)
+  )
+```
+
+Use `ymd()`, `mdy()`, or `dmy()` when the complete date is stored in a single character column. Use `make_date()` when the year, month, and day are stored in separate columns.
+
+### Creating a Date-Time from Separate Columns
+
+If the date and time components are stored separately, we can use `make_datetime()`.
+
+```{r}
+sampling <- tibble(
+  year = c(2024, 2024, 2025),
+  month = c(6, 7, 5),
+  day = c(15, 20, 10),
+  hour = c(8, 14, 19),
+  minute = c(30, 15, 45)
+)
+
+sampling
+```
+
+Now combine them to create one date-time variable from several separate variables:
+
+```{r}
+sampling |>
+  mutate(
+    datetime = make_datetime(
+      year,
+      month,
+      day,
+      hour,
+      minute
+    )
+  )
+```
+
+### A Brief Introduction to Time Zones
+
+Date-times can also contain information about a time zone. We can specify a time zone when creating a date-time:
+
+```{r}
+datetime <- ymd_hms(
+  "2026-08-10 14:00:00",
+  tz = "America/New_York"
+)
+
+datetime
+```
+
+It is best to use standard time-zone names such as: "America/New_York", "America/Los_Angeles", "UTC", rather than abbreviations such as "EST" or "PST".
+
+We can use `with_tz()` to display the same moment in another time zone: `with_tz(datetime, "America/Los_Angeles")`.
+
+Notice that the clock time changes, but these two date-times represent the same moment in time. For most introductory analyses, the important thing is simply to check whether your date-times have the correct time zone.
+
+# Rounding Numbers
+
+R provides several functions for rounding numeric values. The most common is `round()`:
+
+```{r}
+x <- 3.14159
+
+round(x)
+```
+
+By default, `round()` rounds to the nearest whole number. We can use the digits argument to control the number of decimal places:
+
+```{r}
+round(x, digits = 2)
+```
+
+Two related functions are `floor()` and `ceiling()`. `floor()` always rounds down, while `ceiling()` always rounds up.
+
+```{r}
+floor(3.8)
+ceiling(3.2)
+```
+
+# Logarithms
+
+Logarithmic transformations are common when variables are highly skewed or when relationships are multiplicative rather than additive. In R, it is important to know the difference between `log()` and `log10()`. `log()` is the natural logarithm and `log10()` is the base-10 logarithm.
+
+```{r}
+log(10)
+
+log10(10)
+```
+
+# Factors
+
+A factor is R's way of representing a categorical variable. For example, suppose we have observations from three regions:
+
+```{r}
+region <- c(
+  "North",
+  "South",
+  "North",
+  "Central",
+  "South"
+)
+
+class(region)
+```
+
+Right now, R stores region as a character vector. We can convert it to a factor:
+
+```{r}
+region <- factor(region)
+
+region
+
+class(region)
+```
+
+R now knows that region represents a set of categories rather than arbitrary text. We can see the possible categories using:
+
+```{r}
+levels(region)
+```
+
+These categories are called factor levels. Why do factors matter?
+
+Factors are particularly important for: 1. statistical models 2. controlling category order 3. controlling the order of categories in plots
+
+For example, suppose we have size classes:
+
+```{r}
+size_class <- c(
+  "small",
+  "large",
+  "medium",
+  "small"
+)
+```
+
+If we simply convert this to a factor:
+
+```{r}
+factor(size_class)
+```
+
+R orders the levels alphabetically:
+
+large medium small
+
+But that is not the logical order.
+
+We can specify the order ourselves:
+
+```{r}
+size_class <- factor(
+  size_class,
+  levels = c("small", "medium", "large")
+)
+
+levels(size_class)
+```
+
+Now R understands the categories in the order:
+
+small medium large
+
+# Putting it all together
+
+A typical dplyr workflow combines several verbs rather than using one function in isolation.
+
+For example, suppose we want to compare average body size among female penguins by species and island.
+
+```{r}
+penguins |>
+  filter(sex == "female") |>
+	rename(body_mass_g = body_mass) |>
+  mutate(body_mass_kg = body_mass_g / 1000) |>
+  group_by(species, island) |>
+  summarise(
+    n = n(),
+    mean_body_mass_kg = mean(body_mass_kg, na.rm = TRUE),
+    sd_body_mass_kg = sd(body_mass_kg, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  relocate(n, .after = island)
+```
+
+When reading a pipeline, read from top to bottom:
+
+1.  start with the data;
+2.  keep the observations you need;
+3.  create or modify variables;
+4.  define groups;
+5.  calculate summaries; and
+6.  arrange the output variables for readability.
+
+## Final practice
+
+How would you wrangle the data to determine, among penguins observed in 2008 and 2009 with known sex, how many males and females of each species fall into small (\< 4.5 kg) versus large (≥ 4.5 kg) body-mass categories?
+
+Hint:
+
+1.  Keep observations from 2008 and 2009.
+2.  Exclude observations with missing sex.
+3.  Create body mass in kilograms.
+4.  Create a body-mass category:
+    - `"large"` for body mass at least 4.5 kg
+    - `"small"` otherwise
+5.  Count penguins by species, sex, and body-mass category.
+
+```{r}
+# Write your code here
+```
+
+::: {.callout-tip collapse="true"}
+## Solution
+
+```{r}
+penguins |>
+  filter(year %in% c(2008, 2009), !is.na(sex)) |>
+  mutate(
+    body_mass_kg = body_mass / 1000,
+    mass_category = case_when(
+      body_mass_kg >= 4.5 ~ "large",
+      body_mass_kg < 4.5 ~ "small",
+      .default = NA_character_
+    )
+  ) |>
+  count(species, sex, mass_category)
+```
+:::
+
+# Summary
+
+In this tutorial, we built on the core {dplyr} skills from the previous class and introduced additional tools for manipulating, combining, and cleaning data.
+
+Some of the main functions and concepts covered were:
+
+| Task | Function or concept |
+|------------------------------------|------------------------------------|
+| Apply the same operation to multiple variables | `across()` |
+| Count observations by one or more groups | `count()` |
+| Create values based on multiple conditions | `case_when()` |
+| Combine information from related data frames | joins, especially `left_join()` |
+| Identify how tables are related | primary keys and foreign keys |
+| Clean and manipulate character strings | functions from `stringr` |
+| Convert and work with dates and date-times | functions from `lubridate` |
+| Extract parts of dates and times | `year()`, `month()`, `yday()`, `hour()`, etc. |
+| Round numeric values | `round()`, `floor()`, `ceiling()` |
+| Calculate logarithms | `log()` and `log10()` |
+| Represent categorical variables | factors |
+| Control the order of categories | factor levels |
+| Search for patterns in text | regular expressions |
+| Detect or extract text patterns | `str_detect()`, `str_extract()` |
+
+A few important ideas to remember:
+
+- `across()` is useful when the same calculation needs to be repeated across several variables.
+- `count()` is a convenient shortcut for counting rows within groups.
+- `case_when()` is useful when creating a new variable from several logical conditions.
+- Joins connect related data frames using keys. `left_join()` is especially useful for adding information from one data frame to another.
+- Character variables often need to be cleaned or standardized before analysis; `stringr` provides tools for doing this.
+- Dates stored as character strings should be converted to date or date-time objects before working with them.
+- In R, `log()` calculates the **natural logarithm**, while `log10()` calculates the **base-10 logarithm**.
+- Factors represent categorical variables and allow you to control the order of categories.
+- Regular expressions provide a flexible way to search for patterns in character strings.
+
+The larger goal is not to memorize every function. Instead, become comfortable identifying the type of data-wrangling problem you have and knowing which family of tools can help solve it.
+
+As with the {dplyr} functions from the previous tutorial, these tools become most useful when they are combined into readable workflows using the pipe (`|>`).
